@@ -20,6 +20,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -62,5 +63,5 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-pub
 
-      - name: Run unit/widget tests only
-        run: flutter test --no-pub test
+     - name: Run unit/widget tests only
+        run: flutter test test
