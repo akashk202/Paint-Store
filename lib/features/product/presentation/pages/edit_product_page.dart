@@ -1,14 +1,16 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/core/services/cloudinary_upload_service.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:c_h_p/core/services/cloudinary_upload_service.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:c_h_p/features/product/presentation/providers/product_providers.dart';
 
-class EditProductPage extends StatefulWidget {
+class EditProductPage extends ConsumerStatefulWidget {
   final String productKey;
   final Map<String, dynamic> productData;
 
@@ -19,10 +21,10 @@ class EditProductPage extends StatefulWidget {
   });
 
   @override
-  State<EditProductPage> createState() => _EditProductPageState();
+  ConsumerState<EditProductPage> createState() => _EditProductPageState();
 }
 
-class _EditProductPageState extends State<EditProductPage> {
+class _EditProductPageState extends ConsumerState<EditProductPage> {
   final _formKey = GlobalKey<FormState>();
 
   // Use a Product object to easily access data
@@ -213,7 +215,11 @@ class _EditProductPageState extends State<EditProductPage> {
         },
       };
 
-      await FirebaseDatabase.instance.ref('products/${widget.productKey}').update(updatedProductData);
+      // Use data source provider instead of direct Firebase
+      await ref.read(productRemoteDataSourceProvider).updateProduct(
+        widget.productKey,
+        updatedProductData,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product updated successfully')));
@@ -422,7 +428,7 @@ class _EditProductPageState extends State<EditProductPage> {
     );
   }
 
-  Widget _buildPriceField(TextEditingController controller, String label) => TextFormField(controller: controller, decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), prefixText: 'Ã¢â€šÂ¹'), keyboardType: TextInputType.number, validator: (v) => v!.isEmpty ? 'Required' : null);
+  Widget _buildPriceField(TextEditingController controller, String label) => TextFormField(controller: controller, decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), prefixText: '\u20B9'), keyboardType: TextInputType.number, validator: (v) => v!.isEmpty ? 'Required' : null);
 
   Widget _buildBrochurePicker() {
     return InkWell(

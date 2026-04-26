@@ -13,6 +13,21 @@ abstract class ColorCatalogueRemoteDataSource {
 
   /// Fetch products whose shadeName matches.
   Future<List<Product>> fetchProductsByShadeName(String shadeName);
+
+  /// Stream of latest colors ordered by timestamp.
+  Stream<DatabaseEvent> latestColorsStream();
+
+  /// Stream of all color categories (for shade picker UI).
+  Stream<DatabaseEvent> colorCategoriesStream();
+
+  /// Fetch existing shade link for a shade code.
+  Future<Map<String, dynamic>?> fetchShadeLink(String shadeCode);
+
+  /// Create or replace a shade link.
+  Future<void> setShadeLink(String shadeCode, Map<String, dynamic> data);
+
+  /// Remove a shade link.
+  Future<void> removeShadeLink(String shadeCode);
 }
 
 class ColorCatalogueRemoteDataSourceImpl
@@ -88,6 +103,38 @@ class ColorCatalogueRemoteDataSourceImpl
       } catch (_) {}
     });
     return products;
+  }
+
+  @override
+  Stream<DatabaseEvent> latestColorsStream() {
+    return _dbRef.child('latestColors').orderByChild('timestamp').onValue;
+  }
+
+  @override
+  Stream<DatabaseEvent> colorCategoriesStream() {
+    return _dbRef.child('colorCategories').onValue;
+  }
+
+  @override
+  Future<Map<String, dynamic>?> fetchShadeLink(String shadeCode) async {
+    if (shadeCode.isEmpty) return null;
+    try {
+      final snap = await _dbRef.child('shadeLinks/$shadeCode').get();
+      if (snap.exists && snap.value is Map) {
+        return Map<String, dynamic>.from(snap.value as Map);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Future<void> setShadeLink(String shadeCode, Map<String, dynamic> data) async {
+    await _dbRef.child('shadeLinks/$shadeCode').set(data);
+  }
+
+  @override
+  Future<void> removeShadeLink(String shadeCode) async {
+    await _dbRef.child('shadeLinks/$shadeCode').remove();
   }
 }
 

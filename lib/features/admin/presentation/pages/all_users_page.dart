@@ -1,19 +1,17 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:c_h_p/features/user/presentation/providers/user_providers.dart';
 
-class AllUsersPage extends StatefulWidget {
+class AllUsersPage extends ConsumerStatefulWidget {
   const AllUsersPage({super.key});
 
   @override
-  State<AllUsersPage> createState() => _AllUsersPageState();
+  ConsumerState<AllUsersPage> createState() => _AllUsersPageState();
 }
 
-class _AllUsersPageState extends State<AllUsersPage> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref('users');
-  final String? _currentUserId = FirebaseAuth.instance.currentUser?.uid;
+class _AllUsersPageState extends ConsumerState<AllUsersPage> {
 
   Future<void> _promoteToManager(String userId, String userName) async {
     final bool? confirm = await showDialog<bool>(
@@ -39,7 +37,7 @@ class _AllUsersPageState extends State<AllUsersPage> {
 
     if (confirm == true) {
       try {
-        await _dbRef.child(userId).update({'userType': 'Manager'});
+        await ref.read(userRemoteDataSourceProvider).updateUserRole(userId, 'Manager');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('$userName has been promoted to Manager.')),
@@ -70,12 +68,23 @@ class _AllUsersPageState extends State<AllUsersPage> {
             TextButton(
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: Text('Delete', style: GoogleFonts.poppins()),
-              onPressed: () {
-                _dbRef.child(key).remove();
-                Navigator.of(ctx).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("User deleted successfully")),
-                );
+              onPressed: () async {
+                try {
+                  await ref.read(userRemoteDataSourceProvider).deleteUser(key);
+                  if (!ctx.mounted) return;
+                  Navigator.of(ctx).pop();
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("User deleted successfully")),
+                  );
+                } catch (e) {
+                  if (!ctx.mounted) return;
+                  Navigator.of(ctx).pop();
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
+                  );
+                }
               },
             ),
           ],
@@ -86,22 +95,25 @@ class _AllUsersPageState extends State<AllUsersPage> {
 
   @override
   Widget build(BuildContext context) {
+    final asyncUsers = ref.watch(allUsersStreamProvider);
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
         title: Text("All Users", style: GoogleFonts.poppins(color: Colors.white)),
-        // Match the Admin theme from the drawer
         backgroundColor: Colors.red.shade700,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: StreamBuilder(
-        stream: _dbRef.onValue,
-        builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-          if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+      body: asyncUsers.when(
+        loading: () => const Center(child: CircularProgressIndicator(color: Colors.deepOrange)),
+        error: (e, st) => Center(child: Text('Error: $e')),
+        data: (snapshot) {
+          final data = snapshot.snapshot.value;
+          if (data == null || data is! Map) {
             return const Center(child: CircularProgressIndicator(color: Colors.deepOrange));
           }
 
-          final usersMap = Map<String, dynamic>.from(snapshot.data!.snapshot.value as Map);
+          final usersMap = Map<String, dynamic>.from(data);
           final usersList = usersMap.entries.toList();
 
           return ListView.builder(
@@ -109,11 +121,10 @@ class _AllUsersPageState extends State<AllUsersPage> {
             itemCount: usersList.length,
             itemBuilder: (context, index) {
               final userKey = usersList[index].key;
-              final userData = Map<String, dynamic>.from(usersList[index].value);
+              final userData = Map<String, dynamic>.from(usersList[index].value as Map);
               final name = userData['name'] ?? 'No Name';
               final email = userData['email'] ?? 'No Email';
               final userType = userData['userType'] ?? 'N/A';
-              //  NEW: Get the photoUrl from the user data
               final photoUrl = userData['photoUrl'] as String?;
 
               return Card(
@@ -123,7 +134,6 @@ class _AllUsersPageState extends State<AllUsersPage> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: ListTile(
-                    //  MODIFIED: The CircleAvatar now displays the profile picture
                     leading: CircleAvatar(
                       radius: 25,
                       backgroundColor: Colors.red.withValues(alpha: 0.1),
@@ -148,13 +158,11 @@ class _AllUsersPageState extends State<AllUsersPage> {
                             tooltip: 'Promote to Manager',
                             onPressed: () => _promoteToManager(userKey, name),
                           ),
-                        // Prevent the admin from deleting their own account
-                        if (userKey != _currentUserId)
-                          IconButton(
-                            icon: const Icon(Iconsax.trash, color: Colors.red),
-                            tooltip: 'Delete User',
-                            onPressed: () => _confirmDelete(context, userKey, name),
-                          ),
+                        IconButton(
+                          icon: const Icon(Iconsax.trash, color: Colors.red),
+                          tooltip: 'Delete User',
+                          onPressed: () => _confirmDelete(context, userKey, name),
+                        ),
                       ],
                     ),
                   ),
@@ -167,4 +175,3 @@ class _AllUsersPageState extends State<AllUsersPage> {
     );
   }
 }
-

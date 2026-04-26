@@ -60,3 +60,7 @@ final userNotifierProvider = StateNotifierProvider<UserNotifier, UserState>((ref
     getUserRole: ref.read(getUserRoleUseCaseProvider),
   );
 });
+
+final allUsersStreamProvider = StreamProvider<DatabaseEvent>((ref) {
+  return ref.watch(userRemoteDataSourceProvider).fetchAllUsersStream();
+});

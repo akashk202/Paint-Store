@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:c_h_p/features/user/presentation/providers/user_providers.dart';
 
-class ManageUsersPage extends StatefulWidget {
-  const ManageUsersPage({super.key});
+class ManagerRequestsPage extends ConsumerStatefulWidget {
+  const ManagerRequestsPage({super.key});
 
   @override
-  State<ManageUsersPage> createState() => _ManageUsersPageState();
+  ConsumerState<ManagerRequestsPage> createState() => _ManagerRequestsPageState();
 }
 
-class _ManageUsersPageState extends State<ManageUsersPage> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instanceFor(
-    app: Firebase.app(),
-    databaseURL: 'https://smart-paint-shop-default-rtdb.firebaseio.com',
-  ).ref();
+class _ManagerRequestsPageState extends ConsumerState<ManagerRequestsPage> {
 
   List<Map<String, dynamic>> _pendingRequests = [];
   bool _isLoading = true;
@@ -26,30 +22,22 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
   }
 
   Future<void> _fetchPendingRequests() async {
-    final snapshot = await _dbRef.child('users').get();
-    List<Map<String, dynamic>> requests = [];
-
-    if (snapshot.exists) {
-      final users = Map<String, dynamic>.from(snapshot.value as Map);
-      users.forEach((uid, userData) {
-        final user = Map<String, dynamic>.from(userData);
-        if (user['requestedRole'] == 'Manager' && user['status'] == 'pending') {
-          requests.add(user);
-        }
+    try {
+      final requests = await ref.read(userRemoteDataSourceProvider).fetchPendingManagerRequests();
+      if (!mounted) return;
+      setState(() {
+        _pendingRequests = requests;
+        _isLoading = false;
       });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load requests: $e')));
     }
-
-    setState(() {
-      _pendingRequests = requests;
-      _isLoading = false;
-    });
   }
 
   Future<void> _approveRequest(String uid) async {
-    await _dbRef.child('users').child(uid).update({
-      "userType": "Manager",
-      "status": "approved",
-    });
+    await ref.read(userRemoteDataSourceProvider).approveManagerRequest(uid);
     if (!mounted) return;
     await _fetchPendingRequests();
     if (!mounted) return;
@@ -59,11 +47,7 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
   }
 
   Future<void> _denyRequest(String uid) async {
-    await _dbRef.child('users').child(uid).update({
-      "requestedRole": null,
-      "status": "denied",
-      "userType": "Customer",
-    });
+    await ref.read(userRemoteDataSourceProvider).denyManagerRequest(uid);
     if (!mounted) return;
     await _fetchPendingRequests();
     if (!mounted) return;

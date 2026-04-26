@@ -3,7 +3,6 @@ import 'package:c_h_p/features/product/data/models/product_model.dart';
 import 'package:c_h_p/features/product/presentation/pages/edit_product_page.dart';
 import 'package:c_h_p/features/product/presentation/providers/product_providers.dart';
 import 'package:c_h_p/features/product/presentation/providers/product_notifier.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,7 +18,6 @@ class ManageProductsPage extends ConsumerStatefulWidget {
 }
 
 class _ManageProductsPageState extends ConsumerState<ManageProductsPage> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref('products');
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -98,56 +96,27 @@ class _ManageProductsPageState extends ConsumerState<ManageProductsPage> {
           ),
           // --- PRODUCT LIST ---
           Expanded(
-            child: StreamBuilder(
-              // Order by name for consistency
-              stream: _dbRef.orderByChild('name').onValue,
-              builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
+            child: Consumer(
+              builder: (context, ref, child) {
+                final asyncProducts = ref.watch(productsStreamProvider);
+                
+                return asyncProducts.when(
+                  loading: () => const Center(
                       child:
-                          CircularProgressIndicator(color: Colors.deepOrange));
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                      child: Text("Error loading products: ${snapshot.error}"));
-                }
-                if (!snapshot.hasData ||
-                    snapshot.data?.snapshot.value == null) {
-                  return const Center(
-                      child:
-                          Text("No products found. Add one to get started!"));
-                }
+                          CircularProgressIndicator(color: Colors.deepOrange)),
+                  error: (error, stack) => Center(
+                      child: Text("Error loading products: $error")),
+                  data: (List<Product> allProducts) {
+                    if (allProducts.isEmpty) {
+                      return const Center(
+                          child:
+                              Text("No products found. Add one to get started!"));
+                    }
 
-                final productsMap = Map<String, dynamic>.from(
-                    snapshot.data!.snapshot.value as Map);
-
-                // Ã¢Â­Â 2. CONVERT DATA TO PRODUCT OBJECTS FIRST
-                final List<Product> allProducts =
-                    productsMap.entries.map((entry) {
-                  try {
-                    return Product.fromMap(
-                        entry.key, Map<String, dynamic>.from(entry.value));
-                  } catch (e) {
-                    debugPrint(
-                        "Error parsing product ${entry.key} for manage page: $e");
-                    // Return a dummy product or handle error appropriately
-                    return Product(
-                        key: entry.key,
-                        name: "Error Parsing",
-                        description: "",
-                        stock: 0,
-                        mainImageUrl: "",
-                        backgroundImageUrl: "",
-                        benefits: [],
-                        packSizes: [],
-                        brochureUrl: "");
-                  }
-                }).toList();
-
-                // Filter based on the Product object's name
-                final filteredProducts = allProducts.where((product) {
-                  return product.name.toLowerCase().contains(_searchQuery);
-                }).toList();
+                    // Filter based on the Product object's name
+                    final filteredProducts = allProducts.where((product) {
+                      return product.name.toLowerCase().contains(_searchQuery);
+                    }).toList();
 
                 if (filteredProducts.isEmpty) {
                   return const Center(
@@ -160,11 +129,10 @@ class _ManageProductsPageState extends ConsumerState<ManageProductsPage> {
                   itemCount: filteredProducts.length,
                   itemBuilder: (context, index) {
                     final product = filteredProducts[index];
-                    // Still need the raw map for the potentially un-updated EditProductPage
-                    final productData = Map<String, dynamic>.from(
-                        productsMap[product.key] as Map);
                     return _buildProductCard(
-                        product, productData); // Pass both product and raw data
+                        product, product.toMap()); // Pass both product and raw data
+                  },
+                );
                   },
                 );
               },
@@ -252,7 +220,7 @@ class _ManageProductsPageState extends ConsumerState<ManageProductsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        // Ã¢Â­Â Use brand from Product object
+                        // ⭐ Use brand from Product object
                         "Brand: ${product.brand ?? 'N/A'}",
                         style: TextStyle(
                             color: Colors.grey.shade600, fontSize: 13),

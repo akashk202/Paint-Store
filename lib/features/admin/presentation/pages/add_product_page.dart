@@ -1,21 +1,22 @@
 import 'dart:io';
+import 'package:c_h_p/core/services/cloudinary_upload_service.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:iconsax/iconsax.dart';
+import 'package:c_h_p/features/product/presentation/providers/product_providers.dart';
 
-class AddProductPage extends StatefulWidget {
+class AddProductPage extends ConsumerStatefulWidget {
   const AddProductPage({super.key});
 
   @override
-  State<AddProductPage> createState() => _AddProductPageState();
+  ConsumerState<AddProductPage> createState() => _AddProductPageState();
 }
 
-class _AddProductPageState extends State<AddProductPage> {
+class _AddProductPageState extends ConsumerState<AddProductPage> {
   final _formKey = GlobalKey<FormState>();
   // Controllers for text fields
   final _nameController = TextEditingController();
@@ -50,7 +51,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   bool get _isIndigo => _selectedBrand == 'Indigo Paints';
   String _unitType = 'Volume'; // Volume or Weight
 
@@ -143,16 +143,16 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
-  // Upload a file to Firebase Storage
+  // Upload a file using Cloudinary
   Future<String> _uploadFile(File file, String folder) async {
-    String fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}';
-    Reference storageRef = FirebaseStorage.instance.ref().child('$folder/$fileName');
     try {
-      TaskSnapshot snapshot = await storageRef.putFile(file);
-      return await snapshot.ref.getDownloadURL();
+      if (file.path.toLowerCase().endsWith('.pdf')) {
+        return await CloudinaryUploadService.uploadRaw(file, folder: folder);
+      }
+      return await CloudinaryUploadService.uploadImage(file, folder: folder);
     } catch (e) {
       debugPrint("Error uploading file to $folder: $e");
-      throw Exception("Upload failed for $fileName"); // Re-throw to signal failure
+      throw Exception("Upload failed for ${path.basename(file.path)}");
     }
   }
 
@@ -297,7 +297,7 @@ class _AddProductPageState extends State<AddProductPage> {
       }
 
       // --- Save to Firebase ---
-      await _dbRef.child('products').push().set(productData);
+      await ref.read(productRemoteDataSourceProvider).addProduct(productData);
 
       if (mounted) {
         messenger.showSnackBar(const SnackBar(content: Text('Product added successfully!'), backgroundColor: Colors.green));

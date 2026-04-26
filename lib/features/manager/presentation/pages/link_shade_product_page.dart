@@ -1,17 +1,19 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:c_h_p/features/explore/presentation/providers/explore_providers.dart';
+import 'package:c_h_p/features/product/presentation/providers/product_providers.dart';
 
-class LinkShadeProductPage extends StatefulWidget {
+class LinkShadeProductPage extends ConsumerStatefulWidget {
   const LinkShadeProductPage({super.key});
 
   @override
-  State<LinkShadeProductPage> createState() => _LinkShadeProductPageState();
+  ConsumerState<LinkShadeProductPage> createState() => _LinkShadeProductPageState();
 }
 
-class _LinkShadeProductPageState extends State<LinkShadeProductPage> {
-  final _root = FirebaseDatabase.instance.ref();
+class _LinkShadeProductPageState extends ConsumerState<LinkShadeProductPage> {
   final TextEditingController _shadeSearch = TextEditingController();
   final TextEditingController _productSearch = TextEditingController();
 
@@ -34,12 +36,7 @@ class _LinkShadeProductPageState extends State<LinkShadeProductPage> {
   Future<void> _loadExistingLink() async {
     if (_selectedShadeCode.isEmpty) return;
     try {
-      final snap = await _root.child('shadeLinks/$_selectedShadeCode').get();
-      if (snap.exists && snap.value is Map) {
-        _currentLink = Map<String, dynamic>.from(snap.value as Map);
-      } else {
-        _currentLink = null;
-      }
+      _currentLink = await ref.read(colorCatalogueDataSourceProvider).fetchShadeLink(_selectedShadeCode);
     } catch (_) {
       _currentLink = null;
     }
@@ -49,7 +46,7 @@ class _LinkShadeProductPageState extends State<LinkShadeProductPage> {
   Future<void> _unlink() async {
     if (_selectedShadeCode.isEmpty) return;
     try {
-      await _root.child('shadeLinks/$_selectedShadeCode').remove();
+      await ref.read(colorCatalogueDataSourceProvider).removeShadeLink(_selectedShadeCode);
       _currentLink = null;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unlinked')));
@@ -81,7 +78,7 @@ class _LinkShadeProductPageState extends State<LinkShadeProductPage> {
     );
     if (ok != true) return;
     try {
-      await _root.child('shadeLinks/$_selectedShadeCode').set({
+      await ref.read(colorCatalogueDataSourceProvider).setShadeLink(_selectedShadeCode, {
         'productId': _selectedProductId,
         'productName': _selectedProductName,
         'shadeCode': _selectedShadeCode,
@@ -99,6 +96,8 @@ class _LinkShadeProductPageState extends State<LinkShadeProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    final asyncProducts = ref.watch(productsStreamProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Link Shade to Product', style: GoogleFonts.poppins(color: Colors.white)),
@@ -129,7 +128,7 @@ class _LinkShadeProductPageState extends State<LinkShadeProductPage> {
                     ]),
                   ),
                   if (_currentLink != null)
-                    IconButton(tooltip: 'Unlink', icon: Icon(Iconsax.trash), onPressed: _unlink),
+                    IconButton(tooltip: 'Unlink', icon: const Icon(Iconsax.trash), onPressed: _unlink),
                 ],
               ),
             ),
@@ -152,7 +151,7 @@ class _LinkShadeProductPageState extends State<LinkShadeProductPage> {
           SizedBox(
             height: 180,
             child: StreamBuilder<DatabaseEvent>(
-              stream: _root.child('colorCategories').onValue,
+              stream: ref.watch(colorCatalogueDataSourceProvider).colorCategoriesStream(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
                   return const Center(child: Text('No catalog'));
@@ -246,33 +245,24 @@ class _LinkShadeProductPageState extends State<LinkShadeProductPage> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<DatabaseEvent>(
-              stream: _root.child('products').onValue,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
-                  return const Center(child: Text('No products'));
-                }
-                final data = Map<String, dynamic>.from(snapshot.data!.snapshot.value as Map);
-                final items = data.entries
-                    .map((e) => MapEntry(e.key, Map<String, dynamic>.from(e.value)))
-                    .where((e) {
-                      final n = (e.value['name'] ?? '').toString();
-                      return _productQuery.isEmpty || n.toLowerCase().contains(_productQuery.toLowerCase());
-                    })
+            child: asyncProducts.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Center(child: Text('Error: $e')),
+              data: (products) {
+                final items = products
+                    .where((p) => _productQuery.isEmpty || p.name.toLowerCase().contains(_productQuery.toLowerCase()))
                     .toList();
                 return ListView.separated(
                   itemCount: items.length,
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, i) {
-                    final id = items[i].key;
-                    final v = items[i].value;
-                    final name = (v['name'] ?? '').toString();
-                    final selected = _selectedProductId == id;
+                    final product = items[i];
+                    final selected = _selectedProductId == product.id;
                     return ListTile(
-                      title: Text(name, style: GoogleFonts.poppins()),
-                      subtitle: Text(id, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                      title: Text(product.name, style: GoogleFonts.poppins()),
+                      subtitle: Text(product.id ?? '', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
                       trailing: selected ? const Icon(Icons.check, color: Colors.green) : null,
-                      onTap: () => setState(() { _selectedProductId = id; _selectedProductName = name; }),
+                      onTap: () => setState(() { _selectedProductId = product.id ?? ''; _selectedProductName = product.name; }),
                     );
                   },
                 );

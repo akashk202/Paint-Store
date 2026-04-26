@@ -1,43 +1,38 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class SuperLuxuryPage extends StatefulWidget {
+import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
+import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
+import 'package:c_h_p/features/cart/presentation/providers/cart_providers.dart';
+import 'package:c_h_p/features/explore/presentation/providers/explore_providers.dart';
+import 'package:c_h_p/features/explore/presentation/mappers/explore_to_product_mapper.dart';
+
+class SuperLuxuryPage extends ConsumerStatefulWidget {
   const SuperLuxuryPage({super.key});
 
   @override
-  State<SuperLuxuryPage> createState() => _SuperLuxuryPageState();
+  ConsumerState<SuperLuxuryPage> createState() => _SuperLuxuryPageState();
 }
 
-class _SuperLuxuryPageState extends State<SuperLuxuryPage> {
-  // Use a Future for a more efficient, one-time data fetch.
-  Future<List<Product>> _fetchProducts() async {
-    final query = FirebaseDatabase.instance
-        .ref('products')
-        .orderByChild('subCategory')
-        .equalTo('Super Luxury');
-
-    final snapshot = await query.get();
-
-    if (snapshot.exists && snapshot.value != null) {
-      final productsMap = Map<String, dynamic>.from(snapshot.value as Map);
-      List<Product> products = [];
-      productsMap.forEach((key, value) {
-        // This now uses your updated Product.fromMap constructor
-        products.add(Product.fromMap(key, Map<String, dynamic>.from(value)));
-      });
-      // Filter out any products that might be out of stock
-      return products.where((p) => p.stock > 0).toList();
-    }
-    return []; // Return an empty list if no products are found
+class _SuperLuxuryPageState extends ConsumerState<SuperLuxuryPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(productDisplayNotifierProvider.notifier).loadProducts(
+            subCategory: 'Super Luxury',
+          );
+    });
   }
 
+  // Add to cart via Riverpod provider (clean architecture)
   Future<void> _addToCart(Product product) async {
     final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -49,26 +44,19 @@ class _SuperLuxuryPageState extends State<SuperLuxuryPage> {
       return;
     }
 
-    final cartRef =
-        FirebaseDatabase.instance.ref('users/${user.uid}/cart/${product.key}');
+    final firstSize =
+        product.packSizes.isNotEmpty ? product.packSizes.first.size : '';
+    final firstPrice =
+        product.packSizes.isNotEmpty ? product.packSizes.first.price : '0';
+
     try {
-      final snapshot = await cartRef.get();
-      if (snapshot.exists && snapshot.value is Map) {
-        final cartItemData = Map<String, dynamic>.from(snapshot.value as Map);
-        int currentQuantity = cartItemData['quantity'] ?? 0;
-        await cartRef.update({'quantity': currentQuantity + 1});
-      } else {
-        // ÃƒÂ¢Ã‚Â­Ã‚Â FIX: Save cart item using the new data structure
-        await cartRef.set({
-          'name': product.name,
-          'mainImageUrl': product.mainImageUrl,
-          // Storing pack sizes in the cart might be useful later
-          'packSizes': product.packSizes
-              .asMap()
-              .map((_, p) => MapEntry(p.size.replaceAll(' ', ''), p.price)),
-          'quantity': 1,
-        });
-      }
+      await ref.read(cartNotifierProvider.notifier).addOrUpdateItem(
+            productKey: product.key,
+            name: product.name,
+            imageUrl: product.mainImageUrl,
+            size: firstSize,
+            price: firstPrice,
+          );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -86,6 +74,8 @@ class _SuperLuxuryPageState extends State<SuperLuxuryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(productDisplayNotifierProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -111,47 +101,39 @@ class _SuperLuxuryPageState extends State<SuperLuxuryPage> {
           child: Container(color: Colors.grey.shade200, height: 1.0),
         ),
       ),
-      body: FutureBuilder<List<Product>>(
-        future: _fetchProducts(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildLoadingShimmer(); // Show a shimmer skeleton while loading
-          }
-          if (snapshot.hasError) {
-            return _buildErrorState();
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return _buildEmptyState();
-          }
-
-          final superLuxuryProducts = snapshot.data!;
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            itemCount: superLuxuryProducts.length,
-            itemBuilder: (context, index) {
-              final product = superLuxuryProducts[index];
-              return _buildProductCard(context, product)
-                  .animate()
-                  .fadeIn(duration: 600.ms, delay: (150 * index).ms)
-                  .moveX(
-                      begin: -30, duration: 600.ms, curve: Curves.easeOutCubic);
-            },
-          );
-        },
-      ),
+      body: state.loading
+          ? _buildLoadingShimmer()
+          : state.error != null
+              ? _buildErrorState()
+              : state.products.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 20),
+                      itemCount: state.products.length,
+                      itemBuilder: (context, index) {
+                        final product =
+                            exploreEntityToProduct(state.products[index]);
+                        return _buildProductCard(context, product)
+                            .animate()
+                            .fadeIn(
+                                duration: 600.ms, delay: (150 * index).ms)
+                            .moveX(
+                                begin: -30,
+                                duration: 600.ms,
+                                curve: Curves.easeOutCubic);
+                      },
+                    ),
     );
   }
 
   Widget _buildProductCard(BuildContext context, Product product) {
-    // Safely get the price of the first pack size to display, or show 'N/A' if none exist
     final priceToShow =
         product.packSizes.isNotEmpty ? product.packSizes.first.price : 'N/A';
 
     return GestureDetector(
-      onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (_) => ProductDetailPage(product: product))),
+      onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => ProductDetailPage(product: product))),
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         height: 140,
@@ -171,7 +153,6 @@ class _SuperLuxuryPageState extends State<SuperLuxuryPage> {
             ClipRRect(
               borderRadius:
                   const BorderRadius.horizontal(left: Radius.circular(20)),
-              // ÃƒÂ¢Ã‚Â­Ã‚Â FIX: Use mainImageUrl from the updated product model
               child: CachedNetworkImage(
                 imageUrl: product.mainImageUrl,
                 fit: BoxFit.cover,
@@ -208,9 +189,8 @@ class _SuperLuxuryPageState extends State<SuperLuxuryPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        // ÃƒÂ¢Ã‚Â­Ã‚Â FIX: Show the starting price from the pack sizes
                         Text(
-                          'MRP ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹$priceToShow',
+                          'MRP \u20B9$priceToShow',
                           style: GoogleFonts.lato(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -308,7 +288,7 @@ class _SuperLuxuryPageState extends State<SuperLuxuryPage> {
       highlightColor: Colors.grey.shade100,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        itemCount: 5, // Number of shimmer items to show
+        itemCount: 5,
         itemBuilder: (context, index) {
           return Container(
             margin: const EdgeInsets.only(bottom: 20),

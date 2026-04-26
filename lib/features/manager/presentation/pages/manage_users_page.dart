@@ -1,33 +1,27 @@
-import 'package:c_h_p/features/user/data/repositories/user_repository_impl.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:c_h_p/features/user/domain/repositories/user_repository.dart';
+import 'package:c_h_p/features/user/presentation/providers/user_providers.dart';
 
-class ManageUsersPage extends StatelessWidget {
+class ManageUsersPage extends ConsumerWidget {
   const ManageUsersPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final bool isAdmin =
-        (currentUser?.email ?? '') == 'akashkrishna389@gmail.com';
-    final db = FirebaseDatabase.instance.ref('users');
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncUsers = ref.watch(allUsersStreamProvider);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text('Users', style: GoogleFonts.poppins(color: Colors.white)),
         backgroundColor: Colors.pink.shade600,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: StreamBuilder<DatabaseEvent>(
-        stream: db.onValue,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final data = snapshot.data?.snapshot.value;
+      body: asyncUsers.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text('Error: $e')),
+        data: (snapshot) {
+          final data = snapshot.snapshot.value;
           if (data == null || data is! Map) {
             return Center(
                 child: Text('No users found', style: GoogleFonts.poppins()));
@@ -81,11 +75,10 @@ class ManageUsersPage extends StatelessWidget {
                     style: GoogleFonts.poppins(height: 1.3),
                   ),
                   isThreeLine: true,
-                  trailing: isAdmin && uid != (currentUser?.uid ?? '')
-                      ? PopupMenuButton<String>(
+                  trailing: PopupMenuButton<String>(
                           onSelected: (value) async {
                             try {
-                              await FirebaseDatabase.instance.ref('users/$uid/userType').set(value);
+                              await ref.read(userRemoteDataSourceProvider).updateUserRole(uid, value);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -102,15 +95,16 @@ class ManageUsersPage extends StatelessWidget {
                           },
                           itemBuilder: (context) => [
                             const PopupMenuItem(
-                                value: 'Manager',
-                                child: Text('Set as Manager')),
+                                value: 'Customer', child: Text('Customer')),
                             const PopupMenuItem(
-                                value: 'Customer',
-                                child: Text('Set as Customer')),
+                                value: 'Manager', child: Text('Manager')),
+                            const PopupMenuItem(
+                                value: 'Admin', child: Text('Admin')),
+                            const PopupMenuItem(
+                                value: 'Painter', child: Text('Painter')),
                           ],
-                          icon: const Icon(Iconsax.setting_2),
-                        )
-                      : null,
+                          child: const Icon(Iconsax.edit, color: Colors.blue),
+                        ),
                 ),
               );
             },

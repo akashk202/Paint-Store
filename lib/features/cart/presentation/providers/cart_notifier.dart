@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/entities/cart_item.dart';
 import '../../domain/usecases/get_cart_stream.dart';
 import '../../domain/usecases/update_quantity.dart';
 import '../../domain/usecases/change_size.dart';

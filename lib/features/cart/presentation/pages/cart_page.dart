@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -19,7 +18,7 @@ import 'package:c_h_p/features/explore/presentation/pages/categories/interior_pa
 import 'package:c_h_p/features/explore/presentation/pages/categories/exterior_page.dart';
 import 'package:c_h_p/features/explore/presentation/pages/explore_page.dart';
 import 'package:c_h_p/features/product/presentation/pages/latest_colors_page.dart';
-import '../../domain/entities/cart_item.dart';
+
 
 class CartItemDetails {
   final String productKey;
@@ -51,7 +50,6 @@ class CartPage extends ConsumerStatefulWidget {
 
 class _CartPageState extends ConsumerState<CartPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
   // Cache product details to avoid re-fetching on every quantity change
   Map<String, Product?> _productCache = {};
@@ -280,22 +278,21 @@ class _CartPageState extends ConsumerState<CartPage> {
   Future<Map<String, Product?>> _fetchAllProductDetails(
       List<String> productKeys) async {
     final Map<String, Product?> detailsMap = {};
-    // Fire all reads in parallel to reduce total wait time.
-    final futures = productKeys.map((key) async {
-      try {
-        final snapshot = await _dbRef.child('products/$key').get();
-        if (snapshot.exists && snapshot.value != null) {
-          detailsMap[key] = Product.fromMap(
-              key, Map<String, dynamic>.from(snapshot.value as Map));
-        } else {
+    // Use the data source via Riverpod provider instead of direct Firebase
+    final dataSource = ref.read(cartRemoteDataSourceProvider);
+    final rawDetails = await dataSource.fetchProductDetails(productKeys);
+    rawDetails.forEach((key, value) {
+      if (value != null) {
+        try {
+          detailsMap[key] = Product.fromMap(key, value);
+        } catch (e) {
+          debugPrint("Error parsing product details for $key: $e");
           detailsMap[key] = null;
         }
-      } catch (e) {
-        debugPrint("Error fetching details for product $key: $e");
+      } else {
         detailsMap[key] = null;
       }
-    }).toList();
-    await Future.wait(futures);
+    });
     return detailsMap;
   }
 

@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:c_h_p/features/cart/presentation/providers/cart_providers.dart';
 
-class IndigoProductDetailPage extends StatefulWidget {
+class IndigoProductDetailPage extends ConsumerStatefulWidget {
   const IndigoProductDetailPage({super.key, required this.product});
 
   final Product product;
 
   @override
-  State<IndigoProductDetailPage> createState() =>
+  ConsumerState<IndigoProductDetailPage> createState() =>
       _IndigoProductDetailPageState();
 }
 
-class _IndigoProductDetailPageState extends State<IndigoProductDetailPage> {
+class _IndigoProductDetailPageState extends ConsumerState<IndigoProductDetailPage> {
   late PackSize? _selectedPack;
 
   @override
@@ -120,7 +122,7 @@ class _IndigoProductDetailPageState extends State<IndigoProductDetailPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            showPrice ? 'MRP â‚¹$price' : 'MRP â€”',
+            showPrice ? 'MRP \u20B9$price' : 'MRP \u2014',
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: selected ? Colors.deepOrange : Colors.grey.shade600,
@@ -268,7 +270,7 @@ class _IndigoProductDetailPageState extends State<IndigoProductDetailPage> {
             children: [
               Text('MRP  ',
                   style: GoogleFonts.poppins(color: Colors.grey.shade700)),
-              Text('â‚¹${_selectedPack!.price}',
+              Text('\u20B9${_selectedPack!.price}',
                   style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w700,
                       fontSize: 18,
@@ -309,7 +311,7 @@ class _IndigoProductDetailPageState extends State<IndigoProductDetailPage> {
     );
   }
 
-  // Add selected size to cart
+  // Add selected size to cart via Riverpod provider (clean architecture)
   Future<void> _addToCart() async {
     final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -328,49 +330,19 @@ class _IndigoProductDetailPageState extends State<IndigoProductDetailPage> {
           const SnackBar(content: Text('Please select a valid pack size.')));
       return;
     }
-    final cartRef = FirebaseDatabase.instance
-        .ref('users/${user.uid}/cart/${widget.product.key}');
     try {
-      final snapshot = await cartRef.get();
-      if (snapshot.exists && snapshot.value is Map) {
-        final cartItemData = Map<String, dynamic>.from(snapshot.value as Map);
-        if (cartItemData['selectedSize'] == pack.size) {
-          int currentQuantity = cartItemData['quantity'] ?? 0;
-          await cartRef.update(
-              {'quantity': currentQuantity + 1, 'selectedPrice': pack.price});
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(
-                  "${widget.product.name} (${pack.size}) quantity updated!"),
-              backgroundColor: Colors.orange.shade700));
-        } else {
-          await cartRef.set({
-            'name': widget.product.name,
-            'mainImageUrl': widget.product.mainImageUrl,
-            'selectedSize': pack.size,
-            'selectedPrice': pack.price,
-            'quantity': 1,
-          });
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content:
-                  Text("${widget.product.name} (${pack.size}) added to cart."),
-              backgroundColor: Colors.green.shade600));
-        }
-      } else {
-        await cartRef.set({
-          'name': widget.product.name,
-          'mainImageUrl': widget.product.mainImageUrl,
-          'selectedSize': pack.size,
-          'selectedPrice': pack.price,
-          'quantity': 1,
-        });
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content:
-                Text("${widget.product.name} (${pack.size}) added to cart!"),
-            backgroundColor: Colors.green.shade600));
-      }
+      await ref.read(cartNotifierProvider.notifier).addOrUpdateItem(
+            productKey: widget.product.key,
+            name: widget.product.name,
+            imageUrl: widget.product.mainImageUrl,
+            size: pack.size,
+            price: pack.price,
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              Text("${widget.product.name} (${pack.size}) added to cart!"),
+          backgroundColor: Colors.green.shade600));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)

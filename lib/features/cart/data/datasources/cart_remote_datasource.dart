@@ -27,6 +27,10 @@ abstract class CartRemoteDataSource {
     required String size,
     required String price,
   });
+
+  /// Fetch full product details for a list of product keys (for cart enrichment).
+  Future<Map<String, Map<String, dynamic>?>> fetchProductDetails(
+      List<String> productKeys);
 }
 
 class CartRemoteDataSourceImpl implements CartRemoteDataSource {
@@ -147,5 +151,25 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
       'selectedPrice': price,
       'quantity': 1,
     });
+  }
+
+  @override
+  Future<Map<String, Map<String, dynamic>?>> fetchProductDetails(
+      List<String> productKeys) async {
+    final Map<String, Map<String, dynamic>?> result = {};
+    final futures = productKeys.map((key) async {
+      try {
+        final snapshot = await _db.child('products/$key').get();
+        if (snapshot.exists && snapshot.value != null) {
+          result[key] = Map<String, dynamic>.from(snapshot.value as Map);
+        } else {
+          result[key] = null;
+        }
+      } catch (_) {
+        result[key] = null;
+      }
+    }).toList();
+    await Future.wait(futures);
+    return result;
   }
 }

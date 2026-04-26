@@ -113,7 +113,26 @@ class Product {
       benefits: benefitList,
       packSizes: packSizeList, // Assign the sorted list
       brochureUrl: map['brochureUrl'] ?? '',
-      warrantyYears: (map['warrantyYears'] as num?)?.toInt(),
+      warrantyYears: map['warrantyYears'] is int
+          ? map['warrantyYears']
+          : int.tryParse(map['warrantyYears']?.toString() ?? ''),
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'description': description,
+      'stock': stock,
+      if (brand != null) 'brand': brand,
+      if (category != null) 'category': category,
+      if (subCategory != null) 'subCategory': subCategory,
+      'mainImageUrl': mainImageUrl,
+      'backgroundImageUrl': backgroundImageUrl,
+      'benefits': benefits.map((b) => {'image': b.image, 'text': b.text}).toList(),
+      'packSizes': Map.fromEntries(packSizes.map((p) => MapEntry(p.size, p.price))),
+      'brochureUrl': brochureUrl,
+      if (warrantyYears != null) 'warrantyYears': warrantyYears,
+    };
   }
 }

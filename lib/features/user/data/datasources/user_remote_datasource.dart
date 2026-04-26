@@ -18,6 +18,12 @@ abstract class UserRemoteDataSource {
   Future<void> deleteProfilePicture();
   Future<void> updateUserPassword(String currentPassword, String newPassword);
   Future<String> fetchUserRole(String uid);
+  Future<List<Map<String, dynamic>>> fetchPendingManagerRequests();
+  Future<void> approveManagerRequest(String uid);
+  Future<void> denyManagerRequest(String uid);
+  Stream<DatabaseEvent> fetchAllUsersStream();
+  Future<void> updateUserRole(String uid, String role);
+  Future<void> deleteUser(String uid);
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -133,5 +139,54 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
     } catch (_) {
       return 'Customer';
     }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchPendingManagerRequests() async {
+    final snapshot = await dbRef.child('users').get();
+    List<Map<String, dynamic>> requests = [];
+    if (snapshot.exists) {
+      final users = Map<String, dynamic>.from(snapshot.value as Map);
+      users.forEach((uid, userData) {
+        final user = Map<String, dynamic>.from(userData);
+        if (user['requestedRole'] == 'Manager' && user['status'] == 'pending') {
+          user['uid'] = uid; // ensure uid is present
+          requests.add(user);
+        }
+      });
+    }
+    return requests;
+  }
+
+  @override
+  Future<void> approveManagerRequest(String uid) async {
+    await dbRef.child('users').child(uid).update({
+      "userType": "Manager",
+      "status": "approved",
+    });
+  }
+
+  @override
+  Future<void> denyManagerRequest(String uid) async {
+    await dbRef.child('users').child(uid).update({
+      "requestedRole": null,
+      "status": "denied",
+      "userType": "Customer",
+    });
+  }
+
+  @override
+  Stream<DatabaseEvent> fetchAllUsersStream() {
+    return dbRef.child('users').onValue;
+  }
+
+  @override
+  Future<void> updateUserRole(String uid, String role) async {
+    await dbRef.child('users').child(uid).child('userType').set(role);
+  }
+
+  @override
+  Future<void> deleteUser(String uid) async {
+    await dbRef.child('users').child(uid).remove();
   }
 }

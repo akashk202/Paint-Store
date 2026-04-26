@@ -19,6 +19,10 @@ class ProductRemoteDataSource {
     return products;
   }
 
+  Stream<DatabaseEvent> productsStream() {
+    return _ref.orderByChild('name').onValue;
+  }
+
   Future<void> updateProduct(String key, Map<String, dynamic> data) async {
     await _ref.child(key).update(data);
   }
