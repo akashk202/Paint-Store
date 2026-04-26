@@ -16,4 +16,17 @@ class ExploreRepositoryImpl implements ExploreRepository {
   Future<List<ExploreProductEntity>> searchProducts(String query) {
     return remoteDataSource.searchProducts(query);
   }
+
+  @override
+  Future<List<ExploreProductEntity>> fetchProductsByFilter({
+    String? category,
+    String? subCategory,
+    String? brand,
+  }) {
+    return remoteDataSource.fetchProductsByFilter(
+      category: category,
+      subCategory: subCategory,
+      brand: brand,
+    );
+  }
 }

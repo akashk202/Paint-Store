@@ -6,11 +6,13 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:c_h_p/features/cart/presentation/providers/cart_providers.dart';
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
+import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
 
 import '../providers/explore_providers.dart';
 import '../../domain/entities/explore_product_entity.dart';
-import '../../data/models/explore_product_model.dart';
+import '../mappers/explore_to_product_mapper.dart';
 
 class SearchResultsPage extends ConsumerStatefulWidget {
   final String searchQuery;
@@ -32,16 +34,15 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
   Future<void> _addToCart(Product product) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
-      // Create CartItemEntity manually or let addOrUpdateItem handle it
-      // Let's use the clean architecture cartNotifierProvider
       final pack = product.packSizes.isNotEmpty ? product.packSizes.first : null;
       if (pack == null) {
-         messenger.showSnackBar(const SnackBar(content: Text("No pack sizes available for this product.")));
-         return;
+        messenger.showSnackBar(
+          const SnackBar(content: Text("No pack sizes available for this product.")),
+        );
+        return;
       }
-      
+
       final priceStr = pack.price.replaceAll(RegExp(r'[^0-9]'), '');
-      final priceInt = int.tryParse(priceStr) ?? 0;
 
       await ref.read(cartNotifierProvider.notifier).addOrUpdateItem(
             productKey: product.key,
@@ -50,7 +51,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
             size: pack.size,
             price: priceStr,
           );
-      
+
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
@@ -64,10 +65,6 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
         SnackBar(content: Text("Failed to add to cart: $e")),
       );
     }
-  }
-
-  Product _toProduct(ExploreProductEntity entity) {
-    return ExploreProductModel.fromEntity(entity).toProduct();
   }
 
   @override
@@ -114,7 +111,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
         childAspectRatio: 0.65,
       ),
       itemBuilder: (context, index) {
-        return _buildProductCard(context, _toProduct(products[index]))
+        return _buildProductCard(context, exploreEntityToProduct(products[index]))
             .animate()
             .fade(duration: 500.ms, delay: (100 * index).ms)
             .slideY(begin: 0.2, curve: Curves.easeOut);
@@ -155,7 +152,8 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
               childAspectRatio: 0.65,
             ),
             itemBuilder: (context, index) {
-              return _buildProductCard(context, _toProduct(suggestions[index]));
+              return _buildProductCard(
+                  context, exploreEntityToProduct(suggestions[index]));
             },
           ),
         ],
@@ -234,7 +232,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text('MRP ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹$priceToShow',
+                          Text('MRP \u20B9$priceToShow',
                               style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,

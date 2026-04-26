@@ -1,11 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
+import 'package:c_h_p/features/explore/presentation/providers/explore_providers.dart';
+import 'package:c_h_p/features/explore/data/datasources/color_catalogue_remote_datasource.dart';
+
 Color hexToColor(String code) {
   try {
     final hex = code.replaceAll('#', '');
@@ -19,30 +23,30 @@ Color hexToColor(String code) {
 }
 
 //==============================================================================
-// Main Color Catalogue Page
+// Main Color Catalogue Page — now uses ConsumerStatefulWidget + Riverpod
 //==============================================================================
 
-class ColorCataloguePage extends StatefulWidget {
+class ColorCataloguePage extends ConsumerStatefulWidget {
   const ColorCataloguePage({super.key});
 
   @override
-  State<ColorCataloguePage> createState() => _ColorCataloguePageState();
+  ConsumerState<ColorCataloguePage> createState() =>
+      _ColorCataloguePageState();
 }
 
-class _ColorCataloguePageState extends State<ColorCataloguePage> {
-  List<Map<String, String>> _allShades = [];
-  List<String> _categories = [];
-  String _selectedCategory = 'All';
-
+class _ColorCataloguePageState extends ConsumerState<ColorCataloguePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(colorCatalogueNotifierProvider.notifier).loadShades();
+    });
   }
-
-  // Data is provided by ColorCatalogueNotifier via Riverpod.
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(colorCatalogueNotifierProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -53,70 +57,24 @@ class _ColorCataloguePageState extends State<ColorCataloguePage> {
         elevation: 1,
         iconTheme: IconThemeData(color: Colors.grey.shade800),
       ),
-      body: FutureBuilder<DataSnapshot>(
-        future: FirebaseDatabase.instance.ref('colorCategories').get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-                child: CircularProgressIndicator(color: Colors.deepOrange));
-          }
-          if (!snapshot.hasData || snapshot.data!.value == null) {
-            return const Center(child: Text("Color catalogue is empty."));
-          }
-
-          final data = Map<String, dynamic>.from(snapshot.data!.value as Map);
-
-          // Build categories and shades from DB
-          final Set<String> categoriesSet = {'All'};
-          final List<Map<String, String>> allShades = [];
-          data.forEach((categoryKey, shadesData) {
-            final ck = categoryKey.toString();
-            final categoryName =
-                ck.isNotEmpty ? ck[0].toUpperCase() + ck.substring(1) : ck;
-            categoriesSet.add(categoryName);
-            if (shadesData is Map) {
-              final familyShadesMap = Map<String, dynamic>.from(shadesData);
-              familyShadesMap.forEach((shadeCode, shadeDetails) {
-                if (shadeDetails is Map) {
-                  final shade = Map<String, dynamic>.from(shadeDetails);
-                  allShades.add({
-                    'category': categoryName,
-                    'code': shadeCode.toString(),
-                    'name': shade['name']?.toString() ?? 'Unnamed',
-                    'hex': shade['hex']?.toString() ?? '#FFFFFF',
-                  });
-                }
-              });
-            }
-          });
-
-          _categories = categoriesSet.toList()
-            ..sort((a, b) {
-              if (a == 'All') return -1;
-              if (b == 'All') return 1;
-              return a.compareTo(b);
-            });
-          _allShades = allShades;
-
-          final filtered = _selectedCategory == 'All'
-              ? _allShades
-              : _allShades
-                  .where((shade) => shade['category'] == _selectedCategory)
-                  .toList();
-
-          return Column(
-            children: [
-              _buildFilterBar(),
-              Expanded(child: _buildShadesGrid(filtered)),
-            ],
-          );
-        },
-      ),
+      body: state.loading
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.deepOrange))
+          : state.error != null
+              ? Center(child: Text("Error: ${state.error}"))
+              : state.allShades.isEmpty
+                  ? const Center(child: Text("Color catalogue is empty."))
+                  : Column(
+                      children: [
+                        _buildFilterBar(state.categories, state.selectedCategory),
+                        Expanded(child: _buildShadesGrid(state.filteredShades)),
+                      ],
+                    ),
     );
   }
 
-  Widget _buildFilterBar() {
-    if (_categories.length <= 1) return const SizedBox.shrink();
+  Widget _buildFilterBar(List<String> categories, String selectedCategory) {
+    if (categories.length <= 1) return const SizedBox.shrink();
 
     return Container(
       height: 60,
@@ -128,10 +86,10 @@ class _ColorCataloguePageState extends State<ColorCataloguePage> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _categories.length,
+        itemCount: categories.length,
         itemBuilder: (context, index) {
-          final category = _categories[index];
-          final bool isSelected = category == _selectedCategory;
+          final category = categories[index];
+          final bool isSelected = category == selectedCategory;
           return Padding(
             padding: const EdgeInsets.only(right: 12.0),
             child: ChoiceChip(
@@ -139,9 +97,9 @@ class _ColorCataloguePageState extends State<ColorCataloguePage> {
               selected: isSelected,
               onSelected: (selected) {
                 if (selected) {
-                  setState(() {
-                    _selectedCategory = category;
-                  });
+                  ref
+                      .read(colorCatalogueNotifierProvider.notifier)
+                      .selectCategory(category);
                 }
               },
               labelStyle: GoogleFonts.poppins(
@@ -162,8 +120,8 @@ class _ColorCataloguePageState extends State<ColorCataloguePage> {
     );
   }
 
-  Widget _buildShadesGrid(List<Map<String, String>> shades) {
-    if (shades.isEmpty && _selectedCategory != 'All') {
+  Widget _buildShadesGrid(List<ColorShadeModel> shades) {
+    if (shades.isEmpty) {
       return const Center(child: Text("No shades found in this category."));
     }
 
@@ -183,17 +141,15 @@ class _ColorCataloguePageState extends State<ColorCataloguePage> {
     ).animate().fade(duration: 400.ms, curve: Curves.easeOut);
   }
 
-  Widget _buildColorSwatch(BuildContext context, Map<String, String> shade) {
-    final hexCode = shade['hex'] ?? '#FFFFFF';
-    final color = hexToColor(hexCode);
-    final shadeName = shade['name'] ?? 'Unnamed';
-    final shadeCode = shade['code'] ?? '';
+  Widget _buildColorSwatch(BuildContext context, ColorShadeModel shade) {
+    final color = hexToColor(shade.hex);
 
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => ShadeDetailPage(shade: shade)),
+          MaterialPageRoute(
+              builder: (_) => ShadeDetailPage(shade: shade.toMap())),
         );
       },
       child: Column(
@@ -210,7 +166,7 @@ class _ColorCataloguePageState extends State<ColorCataloguePage> {
           ),
           const SizedBox(height: 8),
           Text(
-            shadeName,
+            shade.name,
             style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
@@ -219,7 +175,7 @@ class _ColorCataloguePageState extends State<ColorCataloguePage> {
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            shadeCode,
+            shade.code,
             style:
                 GoogleFonts.poppins(color: Colors.grey.shade600, fontSize: 11),
           ),
@@ -230,14 +186,14 @@ class _ColorCataloguePageState extends State<ColorCataloguePage> {
 }
 
 //==============================================================================
-// Shade Detail Page (Unchanged)
+// Shade Detail Page — now uses ConsumerWidget + data source provider
 //==============================================================================
-class ShadeDetailPage extends StatelessWidget {
+class ShadeDetailPage extends ConsumerWidget {
   final Map<String, String> shade;
   const ShadeDetailPage({super.key, required this.shade});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final String shadeName = shade['name'] ?? 'Unnamed';
     final String shadeCode = shade['code'] ?? 'N/A';
     final Color color = hexToColor(shade['hex'] ?? '#FFFFFF');
@@ -275,42 +231,24 @@ class ShadeDetailPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () async {
-                    // If a manager has linked this shade to a specific product, go directly there.
-                    try {
-                      final code = shade['code']?.toString() ?? '';
-                      if (code.isNotEmpty) {
-                        final linkSnap = await FirebaseDatabase.instance
-                            .ref('shadeLinks/$code')
-                            .get();
-                        if (linkSnap.exists && linkSnap.value is Map) {
-                          final link =
-                              Map<String, dynamic>.from(linkSnap.value as Map);
-                          final String? productId =
-                              link['productId']?.toString();
-                          if (productId != null && productId.isNotEmpty) {
-                            final prodSnap = await FirebaseDatabase.instance
-                                .ref('products/$productId')
-                                .get();
-                            if (prodSnap.exists && prodSnap.value is Map) {
-                              final product = Product.fromMap(
-                                  productId,
-                                  Map<String, dynamic>.from(
-                                      prodSnap.value as Map));
-                              if (!context.mounted) return;
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        ProductDetailPage(product: product)),
-                              );
-                              return;
-                            }
-                          }
-                        }
-                      }
-                    } catch (e) {
-                      // Ignore and fallback
+                    // Use the data source via provider instead of direct Firebase
+                    final dataSource =
+                        ref.read(colorCatalogueDataSourceProvider);
+                    final code = shade['code']?.toString() ?? '';
+                    final linkedProduct =
+                        await dataSource.resolveLinkedProduct(code);
+
+                    if (linkedProduct != null) {
+                      if (!context.mounted) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                ProductDetailPage(product: linkedProduct)),
+                      );
+                      return;
                     }
+
                     if (!context.mounted) return;
                     Navigator.push(
                       context,
@@ -349,20 +287,28 @@ class ShadeDetailPage extends StatelessWidget {
 }
 
 //==============================================================================
-// Product List for Shade Page (THIS IS WHERE THE FIXES ARE)
+// Product List for Shade Page — now uses ConsumerStatefulWidget
 //==============================================================================
-class ProductListForShadePage extends StatefulWidget {
+class ProductListForShadePage extends ConsumerStatefulWidget {
   final String shadeName;
   const ProductListForShadePage({super.key, required this.shadeName});
 
   @override
-  State<ProductListForShadePage> createState() =>
+  ConsumerState<ProductListForShadePage> createState() =>
       _ProductListForShadePageState();
 }
 
-class _ProductListForShadePageState extends State<ProductListForShadePage> {
-  final DatabaseReference _productsRef =
-      FirebaseDatabase.instance.ref('products');
+class _ProductListForShadePageState
+    extends ConsumerState<ProductListForShadePage> {
+  late Future<List<Product>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // Use the data source via provider
+    final dataSource = ref.read(colorCatalogueDataSourceProvider);
+    _productsFuture = dataSource.fetchProductsByShadeName(widget.shadeName);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -376,37 +322,18 @@ class _ProductListForShadePageState extends State<ProductListForShadePage> {
         elevation: 1,
         iconTheme: IconThemeData(color: Colors.grey.shade800),
       ),
-      body: FutureBuilder<DataSnapshot>(
-        future: _productsRef
-            .orderByChild('shadeName')
-            .equalTo(widget.shadeName)
-            .get(),
+      body: FutureBuilder<List<Product>>(
+        future: _productsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
                 child: CircularProgressIndicator(color: Colors.deepOrange));
           }
-          if (!snapshot.hasData || snapshot.data!.value == null) {
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return _buildEmptyState();
           }
 
-          final productsMap =
-              Map<String, dynamic>.from(snapshot.data!.value as Map);
-          final List<Product> products = [];
-          productsMap.forEach((key, value) {
-            try {
-              products
-                  .add(Product.fromMap(key, Map<String, dynamic>.from(value)));
-            } catch (e) {
-              debugPrint(
-                  "Error parsing product for shade list: $e. This might be an old data format.");
-            }
-          });
-
-          if (products.isEmpty) {
-            return _buildEmptyState();
-          }
-
+          final products = snapshot.data!;
           return ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: products.length,
@@ -436,7 +363,6 @@ class _ProductListForShadePageState extends State<ProductListForShadePage> {
     );
   }
 
-  // Ã¢Â­Â THIS WIDGET HAS BEEN FIXED
   Widget _buildProductListItem(BuildContext context, Product product) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -458,7 +384,6 @@ class _ProductListForShadePageState extends State<ProductListForShadePage> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
-                  // Ã¢Â­Â FIX: Use mainImageUrl from the new Product model
                   imageUrl: product.mainImageUrl,
                   width: 80,
                   height: 80,
@@ -486,7 +411,6 @@ class _ProductListForShadePageState extends State<ProductListForShadePage> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    // Ã¢Â­Â FIX: Price has been removed as per your request to simplify the UI
                   ],
                 ),
               ),

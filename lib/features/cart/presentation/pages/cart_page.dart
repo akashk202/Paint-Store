@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
-// Remove incorrect ProductDetailPage imports
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -16,11 +15,12 @@ import 'package:c_h_p/features/cart/presentation/providers/cart_providers.dart';
 import 'package:c_h_p/features/product/data/models/product_model.dart';
 import 'package:c_h_p/features/checkout/presentation/pages/checkout_form_page.dart';
 import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
-import 'package:c_h_p/features/explore/presentation/pages/categories/asian/interior_page.dart';
-import 'package:c_h_p/features/explore/presentation/pages/categories/asian/exterior_page.dart';
+import 'package:c_h_p/features/explore/presentation/pages/categories/interior_page.dart';
+import 'package:c_h_p/features/explore/presentation/pages/categories/exterior_page.dart';
 import 'package:c_h_p/features/explore/presentation/pages/explore_page.dart';
 import 'package:c_h_p/features/product/presentation/pages/latest_colors_page.dart';
 import '../../domain/entities/cart_item.dart';
+
 class CartItemDetails {
   final String productKey;
   final Map<String, dynamic> cartData;

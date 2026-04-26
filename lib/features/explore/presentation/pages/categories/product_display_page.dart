@@ -1,17 +1,23 @@
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
 
-class ProductDisplayPage extends StatefulWidget {
+import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
+import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
+import 'package:c_h_p/features/explore/domain/entities/explore_product_entity.dart';
+import 'package:c_h_p/features/explore/presentation/mappers/explore_to_product_mapper.dart';
+import 'package:c_h_p/features/explore/presentation/providers/explore_providers.dart';
+
+class ProductDisplayPage extends ConsumerStatefulWidget {
   final String title;
   final String? category;
   final String? subCategory;
-  final String? brand; // Optional brand filter
+  final String? brand;
 
   const ProductDisplayPage({
     super.key,
@@ -22,12 +28,11 @@ class ProductDisplayPage extends StatefulWidget {
   });
 
   @override
-  State<ProductDisplayPage> createState() => _ProductDisplayPageState();
+  ConsumerState<ProductDisplayPage> createState() => _ProductDisplayPageState();
 }
 
-class _ProductDisplayPageState extends State<ProductDisplayPage>
+class _ProductDisplayPageState extends ConsumerState<ProductDisplayPage>
     with SingleTickerProviderStateMixin {
-  late Future<List<Product>> _productsFuture;
   late final AnimationController _sadReactionController;
   late final Animation<double> _sadBobY;
   late final Animation<double> _sadTilt;
@@ -38,7 +43,16 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
   @override
   void initState() {
     super.initState();
-    _productsFuture = _fetchProducts();
+
+    // Kick off the data load via the notifier (clean architecture)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(productDisplayNotifierProvider.notifier).loadProducts(
+            category: widget.category,
+            subCategory: widget.subCategory,
+            brand: widget.brand,
+          );
+    });
+
     _sadReactionController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
@@ -148,71 +162,15 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
     super.dispose();
   }
 
-  // This function fetches all products and filters them based on the provided category or sub-category.
-  Future<List<Product>> _fetchProducts() async {
-    Query query = FirebaseDatabase.instance.ref('products');
-    // Prefer querying by category (more common) and filter others client-side
-    if (widget.category != null) {
-      query = query.orderByChild('category').equalTo(widget.category);
-    } else if (widget.subCategory != null) {
-      query = query.orderByChild('subCategory').equalTo(widget.subCategory);
-    }
-
-    final snapshot = await query.get();
-
-    if (snapshot.exists && snapshot.value != null) {
-      final productsMap = Map<String, dynamic>.from(snapshot.value as Map);
-      List<Product> products = [];
-      productsMap.forEach((key, value) {
-        try {
-          products.add(Product.fromMap(key, Map<String, dynamic>.from(value)));
-        } catch (e) {
-          debugPrint("Error parsing product in ProductDisplayPage: $e");
-        }
-      });
-
-      var list = products.where((p) => p.stock > 0).toList();
-
-      // If both category and subCategory are provided, also filter by subCategory here
-      if (widget.category != null &&
-          widget.subCategory != null &&
-          widget.subCategory!.isNotEmpty) {
-        list = list
-            .where((p) => (p.subCategory ?? '') == widget.subCategory)
-            .toList();
-      }
-
-      // Apply optional brand filter client-side
-      if (widget.brand != null && widget.brand!.isNotEmpty) {
-        final b = widget.brand!.toLowerCase();
-        list = list.where((p) {
-          final pb = (p.brand ?? '').toLowerCase();
-          return pb == b || pb.startsWith(b);
-        }).toList();
-      }
-
-      list.sort((a, b) => a.name.compareTo(b.name));
-      // Precache the first few images to reduce on-screen flicker
-      final precacheCount = list.length > 6 ? 6 : list.length;
-      for (int i = 0; i < precacheCount; i++) {
-        final url = list[i].mainImageUrl;
-        if (url.isNotEmpty && mounted) {
-          final provider = CachedNetworkImageProvider(url);
-          // ignore: use_build_context_synchronously
-          precacheImage(provider, context);
-        }
-      }
-      return list;
-    }
-    return [];
-  }
-
   @override
   Widget build(BuildContext context) {
+    final displayState = ref.watch(productDisplayNotifierProvider);
+
     final brandLower = (widget.brand ?? '').toLowerCase();
     final isIndigo = brandLower.startsWith('indigo');
     final isAsian = brandLower.startsWith('asian paints');
     final useLuxuryStyle = isIndigo || isAsian;
+
     return Scaffold(
       backgroundColor:
           useLuxuryStyle ? const Color(0xFFF8F9FA) : Colors.grey.shade100,
@@ -248,45 +206,42 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
               )
             : null,
       ),
-      body: FutureBuilder<List<Product>>(
-        future: _productsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildLoadingShimmer();
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return _buildEmptyState();
-          }
+      body: _buildBody(displayState),
+    );
+  }
 
-          final inStockProducts = snapshot.data!;
+  Widget _buildBody(dynamic displayState) {
+    if (displayState.loading) {
+      return _buildLoadingShimmer();
+    }
+    if (displayState.error != null) {
+      return Center(child: Text("Error: ${displayState.error}"));
+    }
+    if (displayState.products.isEmpty) {
+      return _buildEmptyState();
+    }
 
-          final listView = ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            cacheExtent: 1200,
-            itemCount: inStockProducts.length,
-            itemBuilder: (context, index) {
-              final product = inStockProducts[index];
-              return KeyedSubtree(
-                key: ValueKey('prod_${product.key}'),
-                child: _buildProductListItem(context, product, index: index),
-              );
-            },
-          );
-          if (isIndigo) {
-            return listView;
-          }
-          return listView;
-        },
-      ),
+    // Convert entities to Product models for the card widgets
+    final products = displayState.products
+        .map<Product>((ExploreProductEntity e) => exploreEntityToProduct(e))
+        .toList();
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      cacheExtent: 1200,
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return KeyedSubtree(
+          key: ValueKey('prod_${product.key}'),
+          child: _buildProductListItem(context, product, index: index),
+        );
+      },
     );
   }
 
   Widget _buildProductListItem(BuildContext context, Product product,
       {int? index}) {
-    // Determine a sensible starting price: use the minimum numeric price among pack sizes
     String priceToShow = 'N/A';
     String smallestSizeLabel = '';
     if (product.packSizes.isNotEmpty) {
@@ -299,10 +254,8 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
         }
       }
       if (minPrice != null) {
-        // Format without trailing .0
         priceToShow = minPrice.toStringAsFixed(minPrice % 1 == 0 ? 0 : 2);
       }
-      // Smallest size label using numericSize
       final sortedBySize = [...product.packSizes]
         ..sort((a, b) => a.numericSize.compareTo(b.numericSize));
       smallestSizeLabel = sortedBySize.first.size;
@@ -312,124 +265,143 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
     final isIndigo = brandLower.startsWith('indigo');
     final isAsian = brandLower.startsWith('asian paints');
     if (isIndigo || isAsian) {
-      return GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => isIndigo
-                  ? ProductDetailPage(product: product)
-                  : ProductDetailPage(product: product),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                return FadeTransition(opacity: animation, child: child);
-              },
-              transitionDuration: const Duration(milliseconds: 300),
-            ),
-          );
-        },
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          height: 140,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(18),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
-              )
-            ],
-          ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.horizontal(left: Radius.circular(20)),
-                child: Hero(
-                  tag: 'product_image_${product.key}',
-                  child: CachedNetworkImage(
-                    imageUrl: product.mainImageUrl,
-                    fit: BoxFit.cover,
-                    width: 130,
-                    height: double.infinity,
-                    placeholder: (context, url) =>
-                        Container(color: Colors.grey.shade100),
-                    errorWidget: (c, e, s) => Container(
-                      color: Colors.grey.shade100,
-                      child: Center(
-                        child: Icon(Iconsax.gallery_slash,
-                            size: 40, color: Colors.grey.shade400),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        product.name,
-                        style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          if (smallestSizeLabel.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                    color: Colors.deepOrange.shade100),
-                              ),
-                              child: Text(smallestSizeLabel,
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: Colors.deepOrange.shade700)),
-                            ),
-                          if (smallestSizeLabel.isNotEmpty)
-                            const SizedBox(width: 8),
-                          Text(
-                            'MRP  ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹$priceToShow',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                                color: Colors.deepOrange.shade700),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(right: 8.0),
-                child: Icon(Iconsax.arrow_right_3, color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-      )
+      return _buildLuxuryCard(context, product, priceToShow, smallestSizeLabel,
+              index: index)
           .animate()
           .fadeIn(duration: 600.ms, delay: ((index ?? 0) * 120).ms)
           .moveX(begin: -24, duration: 600.ms, curve: Curves.easeOutCubic);
     }
 
-    // Default (non-Indigo) card
-    final defaultCard = Card(
+    final defaultCard =
+        _buildDefaultCard(context, product, priceToShow, smallestSizeLabel);
+
+    if (isAsian) {
+      return defaultCard
+          .animate()
+          .fadeIn(duration: 600.ms, delay: ((index ?? 0) * 120).ms)
+          .moveX(begin: -24, duration: 600.ms, curve: Curves.easeOutCubic);
+    }
+    return defaultCard;
+  }
+
+  Widget _buildLuxuryCard(BuildContext context, Product product,
+      String priceToShow, String smallestSizeLabel,
+      {int? index}) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                ProductDetailPage(product: product),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        height: 140,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(18),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.horizontal(left: Radius.circular(20)),
+              child: Hero(
+                tag: 'product_image_${product.key}',
+                child: CachedNetworkImage(
+                  imageUrl: product.mainImageUrl,
+                  fit: BoxFit.cover,
+                  width: 130,
+                  height: double.infinity,
+                  placeholder: (context, url) =>
+                      Container(color: Colors.grey.shade100),
+                  errorWidget: (c, e, s) => Container(
+                    color: Colors.grey.shade100,
+                    child: Center(
+                      child: Icon(Iconsax.gallery_slash,
+                          size: 40, color: Colors.grey.shade400),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      product.name,
+                      style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        if (smallestSizeLabel.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: Colors.deepOrange.shade100),
+                            ),
+                            child: Text(smallestSizeLabel,
+                                style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.deepOrange.shade700)),
+                          ),
+                        if (smallestSizeLabel.isNotEmpty)
+                          const SizedBox(width: 8),
+                        Text(
+                          'MRP  \u20B9$priceToShow',
+                          style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: Colors.deepOrange.shade700),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(right: 8.0),
+              child: Icon(Iconsax.arrow_right_3, color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDefaultCard(BuildContext context, Product product,
+      String priceToShow, String smallestSizeLabel) {
+    return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
       shadowColor: Colors.black.withAlpha(25),
@@ -439,13 +411,8 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
           Navigator.push(
             context,
             PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) {
-                final brand = (product.brand ?? '').toLowerCase();
-                if (brand.startsWith('indigo')) {
-                  return ProductDetailPage(product: product);
-                }
-                return ProductDetailPage(product: product);
-              },
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  ProductDetailPage(product: product),
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) {
                 return FadeTransition(opacity: animation, child: child);
@@ -459,7 +426,6 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
           padding: const EdgeInsets.all(12.0),
           child: Row(
             children: [
-              // ÃƒÂ¢Ã‚Â­Ã‚Â FIX: Added Hero widget for smooth image transition
               Hero(
                 tag: 'product_image_${product.key}',
                 child: SizedBox(
@@ -506,7 +472,6 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
-                    // Starting price and smallest pack size
                     Row(
                       children: [
                         if (smallestSizeLabel.isNotEmpty)
@@ -527,7 +492,7 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
                         if (smallestSizeLabel.isNotEmpty)
                           const SizedBox(width: 8),
                         Text(
-                          'MRP  ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹$priceToShow',
+                          'MRP  \u20B9$priceToShow',
                           style: GoogleFonts.poppins(
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
@@ -544,15 +509,6 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
         ),
       ),
     );
-
-    // Animate for Asian Paints to match Luxury-style entrance; otherwise return as-is
-    if ((product.brand ?? '').toLowerCase().startsWith('asian paints')) {
-      return defaultCard
-          .animate()
-          .fadeIn(duration: 600.ms, delay: ((index ?? 0) * 120).ms)
-          .moveX(begin: -24, duration: 600.ms, curve: Curves.easeOutCubic);
-    }
-    return defaultCard;
   }
 
   Widget _buildEmptyState() {
@@ -564,7 +520,7 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
           children: [
             AnimatedBuilder(
               animation: _sadReactionController,
-              child: Text('ÃƒÂ°Ã…Â¸Ã‹Å“Ã…Â¾', style: GoogleFonts.poppins(fontSize: 72)),
+              child: Text('\u{1F61E}', style: GoogleFonts.poppins(fontSize: 72)),
               builder: (context, child) {
                 return Transform.translate(
                   offset: Offset(_sadShakeX.value, _sadBobY.value),
@@ -608,7 +564,7 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
       highlightColor: Colors.grey.shade100,
       child: ListView.builder(
         padding: const EdgeInsets.all(16.0),
-        itemCount: 5, // Show 5 skeleton items
+        itemCount: 5,
         itemBuilder: (context, index) {
           return Card(
             margin: const EdgeInsets.only(bottom: 16),
