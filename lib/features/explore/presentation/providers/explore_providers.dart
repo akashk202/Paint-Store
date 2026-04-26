@@ -6,10 +6,10 @@ import '../../data/repositories/explore_repository_impl.dart';
 import '../../domain/repositories/explore_repository.dart';
 import '../../domain/usecases/get_recommended_products.dart';
 import '../../domain/usecases/search_products.dart';
-import '../Notifier/explore_state.dart';
-import '../Notifier/explore_notifier.dart';
-import '../Notifier/search_state.dart';
-import '../Notifier/search_notifier.dart';
+import 'explore_state.dart';
+import 'explore_notifier.dart';
+import 'search_state.dart';
+import 'search_notifier.dart';
 
 final exploreRemoteDataSourceProvider = Provider<ExploreRemoteDataSource>((ref) {
   return ExploreRemoteDataSourceImpl();

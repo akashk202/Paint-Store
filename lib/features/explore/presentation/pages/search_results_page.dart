@@ -6,7 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:c_h_p/features/cart/presentation/providers/cart_providers.dart';
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/';import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
 
 import '../providers/explore_providers.dart';
 import '../../domain/entities/explore_product_entity.dart';
@@ -44,13 +44,11 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
       final priceInt = int.tryParse(priceStr) ?? 0;
 
       await ref.read(cartNotifierProvider.notifier).addOrUpdateItem(
-            productId: product.key,
+            productKey: product.key,
             name: product.name,
             imageUrl: product.mainImageUrl,
             size: pack.size,
-            pricePaise: priceInt * 100, // Assuming price is in rupees, storing as paise
-            quantity: 1,
-            increment: true,
+            price: priceStr,
           );
       
       if (!mounted) return;
@@ -236,7 +234,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text('MRP ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹$priceToShow',
+                          Text('MRP ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹$priceToShow',
                               style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,

@@ -13,12 +13,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:c_h_p/features/cart/presentation/providers/cart_providers.dart';
 
 // Ensure these import paths match your project structure
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'checkout_form_page.dart';
-import 'package:c_h_p/features/product/presentation/pages/';
-import '../../product/explore/interior_page.dart';
-import '../../product/explore/exterior_page.dart';
-import 'package:c_h_p/features/product/presentation/pages/';
-import 'package:c_h_p/features/product/presentation/pages/';
+import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:c_h_p/features/checkout/presentation/pages/checkout_form_page.dart';
+import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
+import 'package:c_h_p/features/explore/presentation/pages/categories/asian/interior_page.dart';
+import 'package:c_h_p/features/explore/presentation/pages/categories/asian/exterior_page.dart';
+import 'package:c_h_p/features/explore/presentation/pages/explore_page.dart';
+import 'package:c_h_p/features/product/presentation/pages/latest_colors_page.dart';
+import '../../domain/entities/cart_item.dart';
 class CartItemDetails {
   final String productKey;
   final Map<String, dynamic> cartData;
@@ -194,13 +196,13 @@ class _CartPageState extends ConsumerState<CartPage> {
                         child: Text("Error: ${cartState.error}",
                             style: TextStyle(color: Colors.red))));
               }
-              final cartMap = cartState.items;
-              final bool isCartEmpty = cartMap.isEmpty;
+              final cartList = cartState.items;
+              final bool isCartEmpty = cartList.isEmpty;
               if (isCartEmpty) {
                 return Scaffold(
                     appBar: _buildAppBar(false), body: _buildEmptyCart());
               }
-              final productKeys = cartMap.keys.toList();
+              final productKeys = cartList.map((e) => e.productKey).toList();
               return FutureBuilder<Map<String, Product?>>(
                 future: _getProductDetailsCached(productKeys),
                 builder: (context, productDetailsSnapshot) {
@@ -209,25 +211,18 @@ class _CartPageState extends ConsumerState<CartPage> {
 
                   if (productDetailsSnapshot.connectionState ==
                       ConnectionState.waiting) {
-                    bodyContent = _buildCartLoadingShimmer(cartMap.length);
+                    bodyContent = _buildCartLoadingShimmer(cartList.length);
                   } else if (productDetailsSnapshot.hasError) {
                     bodyContent = Center(
                         child: Text("Error: ${productDetailsSnapshot.error}",
                             style: TextStyle(color: Colors.red)));
                   } else {
                     final productDetailsMap = productDetailsSnapshot.data ?? {};
-                    cartItemsWithDetails = cartMap.entries
-                        .map((entry) {
-                          return CartItemDetails(
-                            productKey: entry.key,
-                            cartData: Map<String, dynamic>.from(entry.value),
-                            productDetails: productDetailsMap[entry.key],
-                          );
-                        })
+                    cartItemsWithDetails = cartList.map((cartItem) { return CartItemDetails(productKey: cartItem.productKey, cartData: {'name': cartItem.name, 'mainImageUrl': cartItem.imageUrl, 'quantity': cartItem.quantity, 'selectedSize': cartItem.size, 'selectedPrice': cartItem.price}, productDetails: productDetailsMap[cartItem.productKey]); })
                         .where((item) => item.productDetails != null)
                         .toList();
 
-                    if (cartItemsWithDetails.isEmpty && cartMap.isNotEmpty) {
+                    if (cartItemsWithDetails.isEmpty && cartList.isNotEmpty) {
                       bodyContent = Center(
                           child: Text("Items may have been removed.",
                               style: TextStyle(color: Colors.orange.shade800)));
@@ -592,7 +587,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                                 DropdownMenuItem<PackSize>(
                                     value: packSize,
                                     child: Text(
-                                        '${packSize.size} - Ã¢â€šÂ¹${packSize.price}',
+                                        '${packSize.size} - ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹${packSize.price}',
                                         style:
                                             GoogleFonts.poppins(fontSize: 14))))
                             .toList(),
@@ -608,7 +603,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                     Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Text(
-                            '${currentSelectedPackSize.size} - Ã¢â€šÂ¹${currentSelectedPackSize.price}',
+                            '${currentSelectedPackSize.size} - ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹${currentSelectedPackSize.price}',
                             style: GoogleFonts.poppins(
                                 fontSize: 14, color: Colors.grey.shade700))),
                   const SizedBox(height: 10),
@@ -699,7 +694,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('Ã¢â€šÂ¹${lineTotal.toStringAsFixed(2)}',
+                          Text('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹${lineTotal.toStringAsFixed(2)}',
                               style: GoogleFonts.poppins(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           if (availableStock > 0)
@@ -783,7 +778,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(const SnackBar(
                           content: Text(
-                              'Order total must be at least Ã¢â€šÂ¹1 to proceed.'),
+                              'Order total must be at least ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹1 to proceed.'),
                           backgroundColor: Colors.orange,
                         ));
                         return;
@@ -827,7 +822,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                   fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
                   color: Colors.grey.shade700)),
           Text(
-            '${isDiscount ? '-' : ''}Ã¢â€šÂ¹${amount.toStringAsFixed(2)}',
+            '${isDiscount ? '-' : ''}ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹${amount.toStringAsFixed(2)}',
             style: GoogleFonts.poppins(
                 fontSize: isTotal ? 20 : 16,
                 fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,

@@ -1,3 +1,4 @@
+import 'package:c_h_p/features/user/data/repositories/user_repository_impl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,6 @@ class ManageUsersPage extends StatelessWidget {
     final currentUser = FirebaseAuth.instance.currentUser;
     final bool isAdmin =
         (currentUser?.email ?? '') == 'akashkrishna389@gmail.com';
-    final repo = UserRepository();
     final db = FirebaseDatabase.instance.ref('users');
     return Scaffold(
       appBar: AppBar(
@@ -85,7 +85,7 @@ class ManageUsersPage extends StatelessWidget {
                       ? PopupMenuButton<String>(
                           onSelected: (value) async {
                             try {
-                              await repo.setUserRole(uid: uid, role: value);
+                              await FirebaseDatabase.instance.ref('users/$uid/userType').set(value);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(

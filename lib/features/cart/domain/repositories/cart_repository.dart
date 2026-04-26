@@ -1,3 +1,4 @@
+import '../entities/cart_item.dart';
 abstract class CartRepository {
   Stream<List<CartItem>> cartStream();
 

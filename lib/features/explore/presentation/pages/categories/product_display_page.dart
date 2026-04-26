@@ -1,4 +1,4 @@
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/';import 'package:c_h_p/features/product/presentation/pages/';import 'package:cached_network_image/cached_network_image.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -318,7 +318,7 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
             context,
             PageRouteBuilder(
               pageBuilder: (context, animation, secondaryAnimation) => isIndigo
-                  ? IndigoProductDetailPage(product: product)
+                  ? ProductDetailPage(product: product)
                   : ProductDetailPage(product: product),
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) {
@@ -403,7 +403,7 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
                           if (smallestSizeLabel.isNotEmpty)
                             const SizedBox(width: 8),
                           Text(
-                            'MRP  Ã¢â€šÂ¹$priceToShow',
+                            'MRP  ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹$priceToShow',
                             style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
@@ -442,7 +442,7 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
               pageBuilder: (context, animation, secondaryAnimation) {
                 final brand = (product.brand ?? '').toLowerCase();
                 if (brand.startsWith('indigo')) {
-                  return IndigoProductDetailPage(product: product);
+                  return ProductDetailPage(product: product);
                 }
                 return ProductDetailPage(product: product);
               },
@@ -459,7 +459,7 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
           padding: const EdgeInsets.all(12.0),
           child: Row(
             children: [
-              // Ã¢Â­Â FIX: Added Hero widget for smooth image transition
+              // ÃƒÂ¢Ã‚Â­Ã‚Â FIX: Added Hero widget for smooth image transition
               Hero(
                 tag: 'product_image_${product.key}',
                 child: SizedBox(
@@ -527,7 +527,7 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
                         if (smallestSizeLabel.isNotEmpty)
                           const SizedBox(width: 8),
                         Text(
-                          'MRP  Ã¢â€šÂ¹$priceToShow',
+                          'MRP  ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹$priceToShow',
                           style: GoogleFonts.poppins(
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
@@ -564,7 +564,7 @@ class _ProductDisplayPageState extends State<ProductDisplayPage>
           children: [
             AnimatedBuilder(
               animation: _sadReactionController,
-              child: Text('Ã°Å¸ËœÅ¾', style: GoogleFonts.poppins(fontSize: 72)),
+              child: Text('ÃƒÂ°Ã…Â¸Ã‹Å“Ã…Â¾', style: GoogleFonts.poppins(fontSize: 72)),
               builder: (context, child) {
                 return Transform.translate(
                   offset: Offset(_sadShakeX.value, _sadBobY.value),

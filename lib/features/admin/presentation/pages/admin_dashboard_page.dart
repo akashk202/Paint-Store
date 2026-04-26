@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
 import 'all_users_page.dart';
-import '../features/report/presentation/pages/report_issue_page.dart';
-import 'package:c_h_p/features/product/presentation/pages/';import 'package:c_h_p/features/manager/presentation/pages/manage_color_catalogue_page.dart';
+import 'package:c_h_p/features/report/presentation/pages/report_issue_page.dart';
+import 'package:c_h_p/features/product/presentation/pages/manage_products_page.dart';import 'package:c_h_p/features/manager/presentation/pages/manage_color_catalogue_page.dart';
 
 class AdminDashboardPage extends StatelessWidget {
   const AdminDashboardPage({super.key});
@@ -30,7 +30,7 @@ class AdminDashboardPage extends StatelessWidget {
               icon: Iconsax.flag,
               title: 'View Reports',
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const ViewReportsPage()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportIssuePage()));
               },
             ),
             _buildDashboardCard(

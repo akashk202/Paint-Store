@@ -5,7 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/';
+import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
 Color hexToColor(String code) {
   try {
     final hex = code.replaceAll('#', '');
@@ -436,7 +436,7 @@ class _ProductListForShadePageState extends State<ProductListForShadePage> {
     );
   }
 
-  // â­ THIS WIDGET HAS BEEN FIXED
+  // Ã¢Â­Â THIS WIDGET HAS BEEN FIXED
   Widget _buildProductListItem(BuildContext context, Product product) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -458,7 +458,7 @@ class _ProductListForShadePageState extends State<ProductListForShadePage> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
-                  // â­ FIX: Use mainImageUrl from the new Product model
+                  // Ã¢Â­Â FIX: Use mainImageUrl from the new Product model
                   imageUrl: product.mainImageUrl,
                   width: 80,
                   height: 80,
@@ -486,7 +486,7 @@ class _ProductListForShadePageState extends State<ProductListForShadePage> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    // â­ FIX: Price has been removed as per your request to simplify the UI
+                    // Ã¢Â­Â FIX: Price has been removed as per your request to simplify the UI
                   ],
                 ),
               ),

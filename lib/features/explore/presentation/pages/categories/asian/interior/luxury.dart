@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/';import 'package:firebase_auth/firebase_auth.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -56,7 +56,7 @@ class _LuxuryPageState extends State<LuxuryPage> {
         int currentQuantity = cartItemData['quantity'] ?? 0;
         await cartRef.update({'quantity': currentQuantity + 1});
       } else {
-        // Ã¢Â­Â FIX: Save cart item using the new data structure
+        // ÃƒÂ¢Ã‚Â­Ã‚Â FIX: Save cart item using the new data structure
         await cartRef.set({
           'name': product.name,
           'mainImageUrl': product.mainImageUrl,
@@ -170,7 +170,7 @@ class _LuxuryPageState extends State<LuxuryPage> {
             ClipRRect(
               borderRadius:
                   const BorderRadius.horizontal(left: Radius.circular(20)),
-              // Ã¢Â­Â FIX: Use mainImageUrl from the updated model
+              // ÃƒÂ¢Ã‚Â­Ã‚Â FIX: Use mainImageUrl from the updated model
               child: CachedNetworkImage(
                 imageUrl: product.mainImageUrl,
                 fit: BoxFit.cover,
@@ -207,9 +207,9 @@ class _LuxuryPageState extends State<LuxuryPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        // Ã¢Â­Â FIX: Show starting price from the pack sizes
+                        // ÃƒÂ¢Ã‚Â­Ã‚Â FIX: Show starting price from the pack sizes
                         Text(
-                          'MRP Ã¢â€šÂ¹$priceToShow',
+                          'MRP ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹$priceToShow',
                           style: GoogleFonts.lato(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

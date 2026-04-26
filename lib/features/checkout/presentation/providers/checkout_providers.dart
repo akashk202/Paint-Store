@@ -7,8 +7,8 @@ import '../../data/repositories/checkout_repository_impl.dart';
 import '../../domain/repositories/checkout_repository.dart';
 import '../../domain/usecases/fetch_user_profile.dart';
 import '../../domain/usecases/update_user_profile.dart';
-import '../Notifier/checkout_state.dart';
-import '../Notifier/checkout_notifier.dart';
+import 'checkout_state.dart';
+import 'checkout_notifier.dart';
 
 final checkoutRemoteDataSourceProvider =
     Provider<CheckoutRemoteDataSource>((ref) {

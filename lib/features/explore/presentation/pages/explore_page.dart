@@ -6,12 +6,12 @@ import 'package:c_h_p/features/product/data/models/product_model.dart';import 'p
 import 'package:c_h_p/features/explore/domain/entities/explore_product_entity.dart';
 import 'package:c_h_p/features/explore/presentation/providers/explore_providers.dart';
 import 'package:c_h_p/features/explore/presentation/widgets/recommended_product_card.dart';
-import 'package:c_h_p/features/product/presentation/pages/';import 'categories/interior_page.dart';
+import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'categories/interior_page.dart';
 import 'categories/exterior_page.dart';
 import 'categories/waterproofing_page.dart';
 import 'package:c_h_p/features/explore/presentation/pages/color_catalogue_page.dart'; // Import the catalogue page
 import 'package:c_h_p/features/home/presentation/pages/home_page.dart';
-import 'package:c_h_p/pages/features/user/presentation/pages/personal_info_page.dart';
+import 'package:c_h_p/features/user/presentation/pages/personal_info_page.dart';
 import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
 
 class ExploreProductPage extends ConsumerStatefulWidget {

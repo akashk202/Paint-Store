@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shimmer/shimmer.dart';
 
-import 'package:c_h_p/features/product/data/models/product_model.dart';import '../product_detail_page.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
 
 class OtherProductsPage extends StatelessWidget {
   const OtherProductsPage({super.key});
@@ -44,7 +44,7 @@ class OtherProductsPage extends StatelessWidget {
         elevation: 1,
         iconTheme: IconThemeData(color: Colors.grey.shade800),
       ),
-      // â­ FIX: Switched to FutureBuilder for better performance
+      // Ã¢Â­Â FIX: Switched to FutureBuilder for better performance
       body: FutureBuilder<List<Product>>(
         future: _fetchOtherProducts(),
         builder: (context, snapshot) {
@@ -73,7 +73,7 @@ class OtherProductsPage extends StatelessWidget {
     );
   }
 
-  // â­ FIX: This widget is now updated to use the new Product model
+  // Ã¢Â­Â FIX: This widget is now updated to use the new Product model
   Widget _buildProductListItem(BuildContext context, Product product) {
     // Safely get the price of the first pack size to display
     final priceToShow = product.packSizes.isNotEmpty ? product.packSizes.first.price : 'N/A';
@@ -93,7 +93,7 @@ class OtherProductsPage extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
-                  // â­ FIX: Use mainImageUrl
+                  // Ã¢Â­Â FIX: Use mainImageUrl
                   imageUrl: product.mainImageUrl,
                   width: 70,
                   height: 70,
@@ -114,9 +114,9 @@ class OtherProductsPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              // â­ FIX: Display starting price
+              // Ã¢Â­Â FIX: Display starting price
               Text(
-                'MRP \nâ‚¹$priceToShow',
+                'MRP \nÃ¢â€šÂ¹$priceToShow',
                 textAlign: TextAlign.right,
                 style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.deepOrange.shade700),
               ),

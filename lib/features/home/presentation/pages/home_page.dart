@@ -1,3 +1,4 @@
+import 'package:c_h_p/features/user/presentation/providers/user_providers.dart';
 import 'dart:async';
 import 'package:c_h_p/features/auth/presentation/pages/login_page.dart';
 import 'package:c_h_p/features/home/data/models/home_product_model.dart';
@@ -6,7 +7,7 @@ import 'package:c_h_p/features/product/data/models/product_model.dart';import 'p
 import 'package:c_h_p/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
 import 'package:c_h_p/features/explore/presentation/pages/explore_page.dart';
-import 'package:c_h_p/features/product/presentation/pages/';import 'package:c_h_p/features/explore/presentation/pages/search_results_page.dart';
+import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';import 'package:c_h_p/features/explore/presentation/pages/search_results_page.dart';
 import 'package:c_h_p/features/home/presentation/widgets/featured_carousel.dart';
 import 'package:c_h_p/features/home/presentation/widgets/home_drawer.dart';
 import 'package:c_h_p/features/home/presentation/widgets/home_sections.dart';
@@ -79,9 +80,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         // Listen to role changes and update drawer reactively (except fixed Admin email)
         _roleSub?.cancel();
         if (user.email != 'akashkrishna389@gmail.com') {
-          _roleSub = ref
-              .read(userRepositoryProvider)
-              .userRoleStream(user.uid)
+          _roleSub = Stream.fromFuture(ref.read(userRepositoryProvider).fetchUserRole(user.uid))
               .listen((role) {
             if (!mounted) return;
             setState(() => _userRole = role);

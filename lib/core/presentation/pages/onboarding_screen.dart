@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../features/auth/presentation/pages/login_page.dart';
+import 'package:c_h_p/features/auth/presentation/pages/login_page.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 // Import ProductDetailPage to navigate to product details
-import 'package:c_h_p/features/product/presentation/pages/';
+import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
 // Import Product model for type casting when navigating
 import 'package:c_h_p/features/product/data/models/product_model.dart';
 

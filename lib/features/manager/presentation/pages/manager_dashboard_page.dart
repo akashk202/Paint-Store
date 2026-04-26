@@ -1,8 +1,8 @@
-import 'package:c_h_p/features/report/presentation/pages/view_reports_page.dart';
+import 'package:c_h_p/features/report/presentation/pages/report_issue_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:c_h_p/features/product/presentation/pages/manage_products_page.dart';import 'package:c_h_p/features/explore/presentation/pages/manage_textures_page.dart';
+import 'package:c_h_p/features/product/presentation/pages/manage_products_page.dart';import 'package:c_h_p/features/explore/presentation/pages/categories/asian/interior/textures/manage_textures_page.dart';
 import 'package:c_h_p/features/stock/presentation/pages/stock_monitoring_page.dart';
 import 'package:c_h_p/features/painters/presentation/pages/painters_management_page.dart';
 import 'manage_orders_page.dart';
