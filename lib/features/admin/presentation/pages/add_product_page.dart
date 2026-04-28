@@ -433,7 +433,7 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
 
                     _buildSectionTitle("Categorization *"),
                     DropdownButtonFormField<String>(
-                        value: _selectedBrand,
+                        initialValue: _selectedBrand,
                         decoration: const InputDecoration(labelText: 'Brand *', border: OutlineInputBorder()),
                         items: _brands.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
                         onChanged: (v) {
@@ -450,7 +450,7 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
                         validator: (v) => v == null ? 'Please select a brand' : null),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                        value: _selectedCategory,
+                        initialValue: _selectedCategory,
                         decoration: const InputDecoration(labelText: 'Category *', border: OutlineInputBorder()),
                         items: _getCategoriesForSelection().map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                         onChanged: (v) {
@@ -463,7 +463,7 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
                     if (_selectedCategory != null && _getSubCategoriesForSelection().isNotEmpty) ...[
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                          value: _selectedSubCategory,
+                          initialValue: _selectedSubCategory,
                           decoration: const InputDecoration(labelText: 'Sub-Category *', border: OutlineInputBorder()),
                           // Filter out empty subcategories just in case
                           items: _getSubCategoriesForSelection().where((sc) => sc.isNotEmpty).map((sc) => DropdownMenuItem(value: sc, child: Text(sc))).toList(),

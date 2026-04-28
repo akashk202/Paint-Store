@@ -21,7 +21,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:c_h_p/features/notifications/data/datasources/fcm_remote_datasource.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:c_h_p/features/cart/presentation/providers/cart_providers.dart';
 import 'package:c_h_p/features/visualizer/presentation/pages/visualizer_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';

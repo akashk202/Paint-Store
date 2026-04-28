@@ -1174,7 +1174,7 @@ class _TextureFormState extends State<_TextureForm> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   decoration: const InputDecoration(
                     labelText: "Category",
                     border: OutlineInputBorder(),

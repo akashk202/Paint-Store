@@ -6,12 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
-// Ensure these paths are correct for your project
-import 'package:c_h_p/features/admin/presentation/pages/admin_dashboard_page.dart';
-import 'package:c_h_p/features/manager/presentation/pages/manager_dashboard_page.dart';
-// Removed Profile navigation from drawer per request
-import 'package:c_h_p/features/report/presentation/pages/report_issue_page.dart';
-
 class HomeDrawer extends StatelessWidget {
   final User? currentUser;
   final String userRole;

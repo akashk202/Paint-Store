@@ -91,7 +91,7 @@ class __ServiceCardState extends State<_ServiceCard> {
           curve: Curves.easeOut,
           padding: const EdgeInsets.all(20),
           margin: const EdgeInsets.only(bottom: 20),
-          transform: _isHovering ? (Matrix4.identity()..translate(0, -8, 0)) : Matrix4.identity(),
+          transform: _isHovering ? Matrix4.translationValues(0, -8, 0) : Matrix4.identity(),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),

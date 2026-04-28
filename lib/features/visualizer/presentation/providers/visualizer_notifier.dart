@@ -56,9 +56,9 @@ class VisualizerNotifier extends StateNotifier<VisualizerState> {
     try {
       final c = state.color;
       final hex = '#'
-              '${c.red.toRadixString(16).padLeft(2, '0')}'
-              '${c.green.toRadixString(16).padLeft(2, '0')}'
-              '${c.blue.toRadixString(16).padLeft(2, '0')}'
+              '${(c.r * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}'
+              '${(c.g * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}'
+              '${(c.b * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}'
           .toUpperCase();
           
       final url = await _visualizeImage(

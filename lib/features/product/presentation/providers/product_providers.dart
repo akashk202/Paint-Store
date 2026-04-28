@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasources/product_remote_datasource.dart';
+import '../../data/models/product_model.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/repositories/product_repository.dart';
 

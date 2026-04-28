@@ -257,12 +257,12 @@ class _LinkShadeProductPageState extends ConsumerState<LinkShadeProductPage> {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, i) {
                     final product = items[i];
-                    final selected = _selectedProductId == product.id;
+                    final selected = _selectedProductId == product.key;
                     return ListTile(
                       title: Text(product.name, style: GoogleFonts.poppins()),
-                      subtitle: Text(product.id ?? '', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                      subtitle: Text(product.key, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
                       trailing: selected ? const Icon(Icons.check, color: Colors.green) : null,
-                      onTap: () => setState(() { _selectedProductId = product.id ?? ''; _selectedProductName = product.name; }),
+                      onTap: () => setState(() { _selectedProductId = product.key; _selectedProductName = product.name; }),
                     );
                   },
                 );

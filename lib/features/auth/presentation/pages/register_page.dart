@@ -159,7 +159,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
-    final _isLoading = authState.isLoading;
+    final isLoading = authState.isLoading;
 
     return Container(
       decoration: BoxDecoration(
@@ -204,7 +204,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
                         ),
                       ),
                       const SizedBox(height: 30),
-                      _buildGlassyFormCard(_isLoading),
+                      _buildGlassyFormCard(isLoading),
                       const SizedBox(height: 20),
                       SlideTransition(
                         position: _slideAnimations[6],

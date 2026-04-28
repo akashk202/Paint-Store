@@ -220,9 +220,7 @@ class _ViewReportsPageState extends ConsumerState<ViewReportsPage> {
                               color: Colors.blue.shade600, size: 28),
                           tooltip: 'Mark as Resolved',
                           onPressed: () {
-                            if (userId != null) {
-                              _resolveReport(reportKey, userId, issueText);
-                            }
+                            _resolveReport(reportKey, userId, issueText);
                           },
                         )
                       : Icon(Iconsax.tick_circle,

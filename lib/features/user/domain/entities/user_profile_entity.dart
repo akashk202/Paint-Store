@@ -1,5 +1,3 @@
-import 'dart:io';
-
 class UserProfileEntity {
   final String uid;
   final String email;

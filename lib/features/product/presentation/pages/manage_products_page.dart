@@ -36,17 +36,19 @@ class _ManageProductsPageState extends ConsumerState<ManageProductsPage> {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
             onPressed: () async {
+              final nav = Navigator.of(ctx);
+              final messenger = ScaffoldMessenger.of(context);
               final success = await ref.read(productNotifierProvider.notifier).deleteProduct(key);
               if (mounted) {
-                Navigator.of(ctx).pop();
+                nav.pop();
                 if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                         content: Text('"$name" has been deleted.'),
                         backgroundColor: Colors.red),
                   );
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                         content: const Text('Failed to delete product.'),
                         backgroundColor: Colors.red),

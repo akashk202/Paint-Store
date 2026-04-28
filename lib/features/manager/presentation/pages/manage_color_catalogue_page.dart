@@ -25,7 +25,7 @@ class _ManageColorCataloguePageState extends State<ManageColorCataloguePage>
   final _categoryNameController = TextEditingController();
   final _newCategoryNameController = TextEditingController();
 
-  // ⭐ FIX: Corrected database reference to the proper path.
+  //  FIX: Corrected database reference to the proper path.
   // This was pointing to 'colorCategories/colorCategories' before.
   final DatabaseReference _dbRef =
       FirebaseDatabase.instance.ref('colorCategories');
@@ -275,7 +275,7 @@ class _ManageColorCataloguePageState extends State<ManageColorCataloguePage>
         children: [
           if (_categories.isNotEmpty)
             DropdownButtonFormField<String>(
-              value: _selectedCategoryKey,
+              initialValue: _selectedCategoryKey,
               decoration: const InputDecoration(
                   labelText: 'Color Category', border: OutlineInputBorder()),
               items: _categories.map<DropdownMenuItem<String>>((categoryName) {
@@ -403,7 +403,7 @@ class _ManageColorCataloguePageState extends State<ManageColorCataloguePage>
           const SizedBox(height: 16),
           if (_categories.isNotEmpty)
             DropdownButtonFormField<String>(
-              value: _categoryToRenameKey,
+              initialValue: _categoryToRenameKey,
               decoration: const InputDecoration(
                   labelText: 'Select Category to Rename',
                   border: OutlineInputBorder()),

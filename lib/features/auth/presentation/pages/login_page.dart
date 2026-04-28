@@ -120,7 +120,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final size = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final authState = ref.watch(authNotifierProvider);
-    final _isLoading = authState.isLoading;
+    final isLoading = authState.isLoading;
 
     return Scaffold(
       backgroundColor: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
@@ -292,7 +292,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           SizedBox(
                             width: double.infinity,
                             height: 54,
-                            child: _isLoading
+                            child: isLoading
                                 ? const Center(
                                     child: CircularProgressIndicator(
                                       color: Colors.deepOrange,
