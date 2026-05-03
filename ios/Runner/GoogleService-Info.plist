@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>675110412127-q9ftnkfk5g16tbu9u9fg7n1rdj00esve.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.675110412127-q9ftnkfk5g16tbu9u9fg7n1rdj00esve</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>675110412127-dit92qo0ukrdtb1pjuud4srob37h9prl.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCt8u99y8xHdxUwBYv-Ry6RmLROsVK_UXM</string>
+	<key>GCM_SENDER_ID</key>
+	<string>675110412127</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.cHp</string>
+	<key>PROJECT_ID</key>
+	<string>smart-paint-shop</string>
+	<key>STORAGE_BUCKET</key>
+	<string>smart-paint-shop.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:675110412127:ios:993d85bce480aa2dd560ea</string>
+	<key>DATABASE_URL</key>
+	<string>https://smart-paint-shop-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

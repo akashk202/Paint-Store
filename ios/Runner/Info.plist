@@ -45,7 +45,41 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Camera (AR, image_picker) -->
 	<key>NSCameraUsageDescription</key>
-	<string>This app uses the camera for AR measurement and paint calculation.</string>
+	<string>This app uses the camera for AR measurement, paint calculation, and picking images.</string>
+
+	<!-- Photo Library (image_picker, file_picker) -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to select images for your profile or paint projects.</string>
+
+	<!-- Microphone (sometimes required alongside camera) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app may need microphone access when using the camera.</string>
+
+	<!-- Location (geolocator, geocoding) -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app uses your location to find nearby stores and set delivery addresses.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app uses your location to provide delivery tracking and nearby store suggestions.</string>
+
+	<!-- Face ID (sign_in_with_apple may use biometrics) -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>This app uses Face ID for secure authentication.</string>
+
+	<!-- Firebase Cloud Messaging -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- App Transport Security (allow HTTPS, Firebase, Razorpay) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>
