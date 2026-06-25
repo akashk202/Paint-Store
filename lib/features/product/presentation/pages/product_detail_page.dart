@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:c_h_p/features/product/data/models/product_model.dart';
-import 'package:c_h_p/features/explore/data/datasources/recommendation_remote_datasource.dart';
+import 'package:c_h_p/features/explore/presentation/providers/explore_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,8 +23,23 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
   PackSize? _selectedPack;
 
   Future<List<Product>> _loadSimilarProducts() async {
-    return RecommendationRemoteDataSource.fetchSimilarProducts(widget.product,
-        limit: 10);
+    final getSimilarProducts = ref.read(getSimilarProductsUseCaseProvider);
+    final entities = await getSimilarProducts(widget.product, limit: 10);
+    return entities.map((e) => Product(
+      key: e.key,
+      name: e.name,
+      description: e.description,
+      stock: e.stock,
+      brand: e.brand,
+      category: e.category,
+      subCategory: e.subCategory,
+      mainImageUrl: e.mainImageUrl,
+      backgroundImageUrl: e.backgroundImageUrl,
+      benefits: e.benefits.map((b) => Benefit(image: b.image, text: b.text)).toList(),
+      packSizes: e.packSizes.map((p) => PackSize(size: p.size, price: p.price)).toList(),
+      brochureUrl: e.brochureUrl,
+      warrantyYears: e.warrantyYears,
+    )).toList();
   }
 
   @override

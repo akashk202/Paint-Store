@@ -12,10 +12,17 @@ abstract class ExploreRemoteDataSource {
     String? subCategory,
     String? brand,
   });
+  Future<List<ExploreProductModel>> fetchSimilarProducts(Product anchor, {int limit = 10});
 }
 
 class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+
+  @override
+  Future<List<ExploreProductModel>> fetchSimilarProducts(Product anchor, {int limit = 10}) async {
+    final products = await RecommendationRemoteDataSource.fetchSimilarProducts(anchor, limit: limit);
+    return products.map(ExploreProductModel.fromProduct).toList();
+  }
 
   @override
   Future<List<ExploreProductModel>> fetchRecommended({int limit = 10}) async {

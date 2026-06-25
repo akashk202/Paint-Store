@@ -2,27 +2,59 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasources/product_remote_datasource.dart';
 import '../../data/models/product_model.dart';
 import '../../data/repositories/product_repository_impl.dart';
+import '../../data/repositories/upload_repository_impl.dart';
 import '../../domain/repositories/product_repository.dart';
+import '../../domain/repositories/upload_repository.dart';
+import '../../domain/usecases/add_product.dart';
+import '../../domain/usecases/update_product.dart';
+import '../../domain/usecases/delete_product.dart';
+import '../../domain/usecases/fetch_all_products.dart';
+import '../../domain/usecases/get_products_stream.dart';
+import '../../domain/usecases/upload_raw_file.dart';
+import '../../domain/usecases/upload_image_file.dart';
 
-final productRemoteDataSourceProvider = Provider<ProductRemoteDataSource>((ref) {
+final _productRemoteDataSourceProvider = Provider<ProductRemoteDataSource>((ref) {
   return ProductRemoteDataSource();
 });
 
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
-  final dataSource = ref.watch(productRemoteDataSourceProvider);
+  final dataSource = ref.watch(_productRemoteDataSourceProvider);
   return ProductRepositoryImpl(dataSource);
 });
 
+final uploadRepositoryProvider = Provider<UploadRepository>((ref) {
+  return UploadRepositoryImpl();
+});
+
+final addProductUseCaseProvider = Provider<AddProduct>((ref) {
+  return AddProduct(ref.watch(productRepositoryProvider));
+});
+
+final updateProductUseCaseProvider = Provider<UpdateProduct>((ref) {
+  return UpdateProduct(ref.watch(productRepositoryProvider));
+});
+
+final deleteProductUseCaseProvider = Provider<DeleteProduct>((ref) {
+  return DeleteProduct(ref.watch(productRepositoryProvider));
+});
+
+final fetchAllProductsUseCaseProvider = Provider<FetchAllProducts>((ref) {
+  return FetchAllProducts(ref.watch(productRepositoryProvider));
+});
+
+final getProductsStreamUseCaseProvider = Provider<GetProductsStream>((ref) {
+  return GetProductsStream(ref.watch(productRepositoryProvider));
+});
+
+final uploadRawFileUseCaseProvider = Provider<UploadRawFile>((ref) {
+  return UploadRawFile(ref.watch(uploadRepositoryProvider));
+});
+
+final uploadImageFileUseCaseProvider = Provider<UploadImageFile>((ref) {
+  return UploadImageFile(ref.watch(uploadRepositoryProvider));
+});
+
 final productsStreamProvider = StreamProvider<List<Product>>((ref) {
-  return ref.watch(productRemoteDataSourceProvider).productsStream().map((event) {
-    if (event.snapshot.value == null) return [];
-    final map = Map<String, dynamic>.from(event.snapshot.value as Map);
-    final List<Product> products = [];
-    map.forEach((key, value) {
-      try {
-        products.add(Product.fromMap(key, Map<String, dynamic>.from(value)));
-      } catch (_) {}
-    });
-    return products;
-  });
+  final getProductsStream = ref.watch(getProductsStreamUseCaseProvider);
+  return getProductsStream();
 });

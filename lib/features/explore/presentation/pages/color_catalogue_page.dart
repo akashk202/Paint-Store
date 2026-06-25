@@ -8,7 +8,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:c_h_p/features/product/data/models/product_model.dart';
 import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
 import 'package:c_h_p/features/explore/presentation/providers/explore_providers.dart';
-import 'package:c_h_p/features/explore/data/datasources/color_catalogue_remote_datasource.dart';
+import 'package:c_h_p/features/explore/domain/entities/color_shade.dart';
 
 Color hexToColor(String code) {
   try {
@@ -120,7 +120,7 @@ class _ColorCataloguePageState extends ConsumerState<ColorCataloguePage> {
     );
   }
 
-  Widget _buildShadesGrid(List<ColorShadeModel> shades) {
+  Widget _buildShadesGrid(List<ColorShade> shades) {
     if (shades.isEmpty) {
       return const Center(child: Text("No shades found in this category."));
     }
@@ -141,7 +141,7 @@ class _ColorCataloguePageState extends ConsumerState<ColorCataloguePage> {
     ).animate().fade(duration: 400.ms, curve: Curves.easeOut);
   }
 
-  Widget _buildColorSwatch(BuildContext context, ColorShadeModel shade) {
+  Widget _buildColorSwatch(BuildContext context, ColorShade shade) {
     final color = hexToColor(shade.hex);
 
     return GestureDetector(
@@ -149,7 +149,7 @@ class _ColorCataloguePageState extends ConsumerState<ColorCataloguePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => ShadeDetailPage(shade: shade.toMap())),
+              builder: (_) => ShadeDetailPage(shade: shade)),
         );
       },
       child: Column(
@@ -189,14 +189,14 @@ class _ColorCataloguePageState extends ConsumerState<ColorCataloguePage> {
 // Shade Detail Page — now uses ConsumerWidget + data source provider
 //==============================================================================
 class ShadeDetailPage extends ConsumerWidget {
-  final Map<String, String> shade;
+  final ColorShade shade;
   const ShadeDetailPage({super.key, required this.shade});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final String shadeName = shade['name'] ?? 'Unnamed';
-    final String shadeCode = shade['code'] ?? 'N/A';
-    final Color color = hexToColor(shade['hex'] ?? '#FFFFFF');
+    final String shadeName = shade.name;
+    final String shadeCode = shade.code;
+    final Color color = hexToColor(shade.hex);
 
     return Scaffold(
       appBar: AppBar(
@@ -231,12 +231,12 @@ class ShadeDetailPage extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () async {
-                    // Use the data source via provider instead of direct Firebase
-                    final dataSource =
-                        ref.read(colorCatalogueDataSourceProvider);
-                    final code = shade['code']?.toString() ?? '';
+                    // Use ResolveLinkedProduct UseCase
+                    final resolveLinkedProduct =
+                        ref.read(resolveLinkedProductUseCaseProvider);
+                    final code = shade.code;
                     final linkedProduct =
-                        await dataSource.resolveLinkedProduct(code);
+                        await resolveLinkedProduct(code);
 
                     if (linkedProduct != null) {
                       if (!context.mounted) return;
@@ -305,9 +305,9 @@ class _ProductListForShadePageState
   @override
   void initState() {
     super.initState();
-    // Use the data source via provider
-    final dataSource = ref.read(colorCatalogueDataSourceProvider);
-    _productsFuture = dataSource.fetchProductsByShadeName(widget.shadeName);
+    // Use FetchProductsByShadeName UseCase
+    final fetchProductsByShadeName = ref.read(fetchProductsByShadeNameUseCaseProvider);
+    _productsFuture = fetchProductsByShadeName(widget.shadeName);
   }
 
   @override

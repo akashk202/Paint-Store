@@ -1,8 +1,8 @@
-import '../../data/datasources/color_catalogue_remote_datasource.dart';
+import '../../domain/entities/color_shade.dart';
 
 class ColorCatalogueState {
   final bool loading;
-  final List<ColorShadeModel> allShades;
+  final List<ColorShade> allShades;
   final List<String> categories;
   final String selectedCategory;
   final Object? error;
@@ -15,13 +15,13 @@ class ColorCatalogueState {
     this.error,
   });
 
-  List<ColorShadeModel> get filteredShades => selectedCategory == 'All'
+  List<ColorShade> get filteredShades => selectedCategory == 'All'
       ? allShades
       : allShades.where((s) => s.category == selectedCategory).toList();
 
   ColorCatalogueState copyWith({
     bool? loading,
-    List<ColorShadeModel>? allShades,
+    List<ColorShade>? allShades,
     List<String>? categories,
     String? selectedCategory,
     Object? error,

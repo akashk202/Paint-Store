@@ -1,3 +1,4 @@
+import '../../../product/data/models/product_model.dart';
 import '../../domain/entities/explore_product_entity.dart';
 import '../../domain/repositories/explore_repository.dart';
 import '../datasources/explore_remote_datasource.dart';
@@ -6,6 +7,11 @@ class ExploreRepositoryImpl implements ExploreRepository {
   final ExploreRemoteDataSource remoteDataSource;
 
   ExploreRepositoryImpl(this.remoteDataSource);
+
+  @override
+  Future<List<ExploreProductEntity>> fetchSimilarProducts(Product anchor, {int limit = 10}) {
+    return remoteDataSource.fetchSimilarProducts(anchor, limit: limit);
+  }
 
   @override
   Future<List<ExploreProductEntity>> fetchRecommended({int limit = 10}) {

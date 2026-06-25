@@ -1,3 +1,4 @@
+import '../../../product/data/models/product_model.dart';
 import '../entities/explore_product_entity.dart';
 
 abstract class ExploreRepository {
@@ -8,4 +9,5 @@ abstract class ExploreRepository {
     String? subCategory,
     String? brand,
   });
+  Future<List<ExploreProductEntity>> fetchSimilarProducts(Product anchor, {int limit = 10});
 }

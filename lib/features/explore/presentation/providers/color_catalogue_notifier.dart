@@ -1,19 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/datasources/color_catalogue_remote_datasource.dart';
+import '../../domain/entities/color_shade.dart';
+import '../../domain/usecases/fetch_all_shades.dart';
 import 'color_catalogue_state.dart';
 
 class ColorCatalogueNotifier extends StateNotifier<ColorCatalogueState> {
-  final ColorCatalogueRemoteDataSource _dataSource;
+  final FetchAllShades _fetchAllShades;
 
   ColorCatalogueNotifier({
-    required ColorCatalogueRemoteDataSource dataSource,
-  })  : _dataSource = dataSource,
+    required FetchAllShades fetchAllShades,
+  })  : _fetchAllShades = fetchAllShades,
         super(const ColorCatalogueState());
 
   Future<void> loadShades() async {
     state = state.copyWith(loading: true, error: null);
     try {
-      final shades = await _dataSource.fetchAllShades();
+      final shades = await _fetchAllShades();
       final categoriesSet = <String>{'All'};
       for (final s in shades) {
         categoriesSet.add(s.category);

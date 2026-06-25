@@ -18,4 +18,19 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<void> addProduct(Map<String, dynamic> data) => _remoteDataSource.addProduct(data);
+
+  @override
+  Stream<List<Product>> productsStream() {
+    return _remoteDataSource.productsStream().map((event) {
+      if (event.snapshot.value == null) return [];
+      final map = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final List<Product> products = [];
+      map.forEach((key, value) {
+        try {
+          products.add(Product.fromMap(key, Map<String, dynamic>.from(value)));
+        } catch (_) {}
+      });
+      return products;
+    });
+  }
 }

@@ -1,5 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:c_h_p/features/product/data/models/product_model.dart';
+import '../../domain/entities/color_shade.dart';
 
 /// Data source for color catalogue operations.
 /// All Firebase access for color shades, shade links, and shade-product
@@ -139,17 +140,12 @@ class ColorCatalogueRemoteDataSourceImpl
 }
 
 /// Simple model for a color shade entry.
-class ColorShadeModel {
-  final String category;
-  final String code;
-  final String name;
-  final String hex;
-
+class ColorShadeModel extends ColorShade {
   const ColorShadeModel({
-    required this.category,
-    required this.code,
-    required this.name,
-    required this.hex,
+    required super.category,
+    required super.code,
+    required super.name,
+    required super.hex,
   });
 
   Map<String, String> toMap() => {

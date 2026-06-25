@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:c_h_p/core/services/cloudinary_upload_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -143,13 +142,13 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
     }
   }
 
-  // Upload a file using Cloudinary
+  // Upload a file using Cloudinary Use Cases
   Future<String> _uploadFile(File file, String folder) async {
     try {
       if (file.path.toLowerCase().endsWith('.pdf')) {
-        return await CloudinaryUploadService.uploadRaw(file, folder: folder);
+        return await ref.read(uploadRawFileUseCaseProvider).call(file, folder: folder);
       }
-      return await CloudinaryUploadService.uploadImage(file, folder: folder);
+      return await ref.read(uploadImageFileUseCaseProvider).call(file, folder: folder);
     } catch (e) {
       debugPrint("Error uploading file to $folder: $e");
       throw Exception("Upload failed for ${path.basename(file.path)}");
@@ -297,7 +296,7 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
       }
 
       // --- Save to Firebase ---
-      await ref.read(productRemoteDataSourceProvider).addProduct(productData);
+      await ref.read(addProductUseCaseProvider).call(productData);
 
       if (mounted) {
         messenger.showSnackBar(const SnackBar(content: Text('Product added successfully!'), backgroundColor: Colors.green));

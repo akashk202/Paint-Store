@@ -36,7 +36,7 @@ class _LinkShadeProductPageState extends ConsumerState<LinkShadeProductPage> {
   Future<void> _loadExistingLink() async {
     if (_selectedShadeCode.isEmpty) return;
     try {
-      _currentLink = await ref.read(colorCatalogueDataSourceProvider).fetchShadeLink(_selectedShadeCode);
+      _currentLink = await ref.read(fetchShadeLinkUseCaseProvider).call(_selectedShadeCode);
     } catch (_) {
       _currentLink = null;
     }
@@ -46,7 +46,7 @@ class _LinkShadeProductPageState extends ConsumerState<LinkShadeProductPage> {
   Future<void> _unlink() async {
     if (_selectedShadeCode.isEmpty) return;
     try {
-      await ref.read(colorCatalogueDataSourceProvider).removeShadeLink(_selectedShadeCode);
+      await ref.read(removeShadeLinkUseCaseProvider).call(_selectedShadeCode);
       _currentLink = null;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unlinked')));
@@ -78,7 +78,7 @@ class _LinkShadeProductPageState extends ConsumerState<LinkShadeProductPage> {
     );
     if (ok != true) return;
     try {
-      await ref.read(colorCatalogueDataSourceProvider).setShadeLink(_selectedShadeCode, {
+      await ref.read(setShadeLinkUseCaseProvider).call(_selectedShadeCode, {
         'productId': _selectedProductId,
         'productName': _selectedProductName,
         'shadeCode': _selectedShadeCode,
@@ -150,13 +150,13 @@ class _LinkShadeProductPageState extends ConsumerState<LinkShadeProductPage> {
           ),
           SizedBox(
             height: 180,
-            child: StreamBuilder<DatabaseEvent>(
-              stream: ref.watch(colorCatalogueDataSourceProvider).colorCategoriesStream(),
+            child: StreamBuilder<Map<String, dynamic>>(
+              stream: ref.watch(getColorCategoriesStreamUseCaseProvider).call(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
+                final data = snapshot.data;
+                if (data == null || data.isEmpty) {
                   return const Center(child: Text('No catalog'));
                 }
-                final data = Map<String, dynamic>.from(snapshot.data!.snapshot.value as Map);
                 final List<Map<String, String>> shades = [];
                 data.forEach((categoryKey, shadesData) {
                   if (shadesData is Map) {

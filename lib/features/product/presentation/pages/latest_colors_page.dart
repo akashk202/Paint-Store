@@ -1,4 +1,3 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,8 +25,7 @@ class LatestColorsPage extends ConsumerStatefulWidget {
 class _LatestColorsPageState extends ConsumerState<LatestColorsPage> {
   @override
   Widget build(BuildContext context) {
-    // Get the data source via Riverpod provider
-    final dataSource = ref.watch(colorCatalogueDataSourceProvider);
+    final latestColorsStream = ref.watch(getLatestColorsStreamUseCaseProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -37,21 +35,26 @@ class _LatestColorsPageState extends ConsumerState<LatestColorsPage> {
         backgroundColor: Colors.pink.shade600,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: StreamBuilder<DatabaseEvent>(
-        stream: dataSource.latestColorsStream(),
+      body: StreamBuilder<Map<String, dynamic>>(
+        stream: latestColorsStream.call(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          final data = snapshot.data?.snapshot.value;
-          if (data == null || data is! Map) {
+          final data = snapshot.data;
+          if (data == null || data.isEmpty) {
             return Center(
                 child: Text('No latest colors added yet',
                     style: GoogleFonts.poppins(color: Colors.grey)));
           }
           final items = Map<String, dynamic>.from(data).entries.toList()
-            ..sort((a, b) => ((b.value['timestamp'] ?? 0) as int)
-                .compareTo((a.value['timestamp'] ?? 0) as int));
+            ..sort((a, b) {
+              final bMap = b.value is Map ? Map<String, dynamic>.from(b.value as Map) : {};
+              final aMap = a.value is Map ? Map<String, dynamic>.from(a.value as Map) : {};
+              final bTime = bMap['timestamp'] ?? 0;
+              final aTime = aMap['timestamp'] ?? 0;
+              return (bTime as num).compareTo(aTime as num);
+            });
 
           return GridView.builder(
             padding: const EdgeInsets.all(16),
@@ -63,7 +66,8 @@ class _LatestColorsPageState extends ConsumerState<LatestColorsPage> {
             ),
             itemCount: items.length,
             itemBuilder: (context, i) {
-              final v = Map<String, dynamic>.from(items[i].value);
+              final entry = items[i];
+              final v = entry.value is Map ? Map<String, dynamic>.from(entry.value as Map) : <String, dynamic>{};
               final name = (v['name'] ?? '').toString();
               final hex = (v['hex'] ?? v['hexCode'] ?? '#CCCCCC').toString();
               final color = hexToColor(hex);
@@ -76,9 +80,11 @@ class _LatestColorsPageState extends ConsumerState<LatestColorsPage> {
                     return;
                   }
                   try {
-                    // Use data source provider instead of direct Firebase
+                    // Use ResolveLinkedProduct UseCase
+                    final resolveLinkedProduct =
+                        ref.read(resolveLinkedProductUseCaseProvider);
                     final linkedProduct =
-                        await dataSource.resolveLinkedProduct(code);
+                        await resolveLinkedProduct(code);
                     if (linkedProduct != null) {
                       if (!context.mounted) return;
                       Navigator.push(

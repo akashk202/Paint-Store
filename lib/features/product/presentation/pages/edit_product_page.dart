@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:c_h_p/features/product/data/models/product_model.dart';
-import 'package:c_h_p/core/services/cloudinary_upload_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -171,9 +170,9 @@ class _EditProductPageState extends ConsumerState<EditProductPage> {
   Future<String> _uploadFile(File file, String folder) async {
     final ext = file.path.toLowerCase();
     if (ext.endsWith('.pdf')) {
-      return CloudinaryUploadService.uploadRaw(file, folder: folder);
+      return ref.read(uploadRawFileUseCaseProvider).call(file, folder: folder);
     }
-    return CloudinaryUploadService.uploadImage(file, folder: folder);
+    return ref.read(uploadImageFileUseCaseProvider).call(file, folder: folder);
   }
 
   Future<void> _updateProduct() async {
@@ -215,8 +214,8 @@ class _EditProductPageState extends ConsumerState<EditProductPage> {
         },
       };
 
-      // Use data source provider instead of direct Firebase
-      await ref.read(productRemoteDataSourceProvider).updateProduct(
+      // Use update product use case
+      await ref.read(updateProductUseCaseProvider).call(
         widget.productKey,
         updatedProductData,
       );
