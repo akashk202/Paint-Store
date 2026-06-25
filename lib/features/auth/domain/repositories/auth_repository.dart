@@ -1,9 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
-  Future<UserCredential> signInWithEmailAndPassword(String email, String password);
+  Future<Either<Failure, UserEntity>> login({
+    required String email,
+    required String password,
+  });
   
-  Future<void> registerUser({
+  Future<Either<Failure, UserEntity>> register({
     required String name,
     required String email,
     required String phone,
@@ -11,9 +16,12 @@ abstract class AuthRepository {
     required String address,
   });
   
-  Future<UserCredential?> signInWithGoogle();
+  Future<Either<Failure, UserEntity>> googleSignIn();
   
-  Future<void> resetPassword(String email);
+  Future<Either<Failure, void>> resetPassword({required String email});
   
-  Future<void> signOut();
+  Future<Either<Failure, void>> logout();
+
+  Either<Failure, UserEntity?> getCurrentUser();
 }
+

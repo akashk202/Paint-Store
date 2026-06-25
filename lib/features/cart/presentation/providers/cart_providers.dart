@@ -12,24 +12,19 @@ import 'package:c_h_p/features/cart/domain/usecases/change_size.dart';
 import 'package:c_h_p/features/cart/domain/usecases/remove_item.dart';
 import 'package:c_h_p/features/cart/domain/usecases/clear_cart.dart';
 import 'package:c_h_p/features/cart/domain/usecases/add_or_update_item.dart';
+import 'package:c_h_p/features/cart/domain/usecases/fetch_product_details.dart';
 import 'package:c_h_p/features/cart/presentation/providers/cart_notifier.dart';
 import 'package:c_h_p/features/cart/presentation/providers/cart_state.dart';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-
-
-
-
-
-
 // ============================================
 // Clean Architecture Cart (Riverpod)
 // ============================================
 
-// Data Source Provider
-final cartRemoteDataSourceProvider = Provider<CartRemoteDataSource>((ref) {
+// Data Source Provider (Private to avoid presentation layer bypassing repository)
+final _cartRemoteDataSourceProvider = Provider<CartRemoteDataSource>((ref) {
   return CartRemoteDataSourceImpl(
     db: FirebaseDatabase.instance,
     auth: FirebaseAuth.instance,
@@ -38,7 +33,7 @@ final cartRemoteDataSourceProvider = Provider<CartRemoteDataSource>((ref) {
 
 // Repository Provider
 final cartCleanRepositoryProvider = Provider<CartRepository>((ref) {
-  final dataSource = ref.read(cartRemoteDataSourceProvider);
+  final dataSource = ref.read(_cartRemoteDataSourceProvider);
   return CartRepositoryImpl(dataSource);
 });
 
@@ -65,6 +60,10 @@ final cartClearCartUseCaseProvider = Provider<ClearCart>((ref) {
 
 final cartAddOrUpdateItemUseCaseProvider = Provider<AddOrUpdateItem>((ref) {
   return AddOrUpdateItem(ref.read(cartCleanRepositoryProvider));
+});
+
+final cartFetchProductDetailsUseCaseProvider = Provider<FetchProductDetails>((ref) {
+  return FetchProductDetails(ref.read(cartCleanRepositoryProvider));
 });
 
 // Notifier Provider (Clean Architecture + Riverpod)

@@ -15,4 +15,11 @@ abstract class UserRepository {
   Future<void> deleteProfilePicture();
   Future<void> updateUserPassword(String currentPassword, String newPassword);
   Future<String> fetchUserRole(String uid);
+  Future<List<Map<String, dynamic>>> fetchPendingManagerRequests();
+  Future<void> approveManagerRequest(String uid);
+  Future<void> denyManagerRequest(String uid);
+  Stream<Map<String, dynamic>> fetchAllUsersStream();
+  Future<void> updateUserRole(String uid, String role);
+  Future<void> deleteUser(String uid);
 }
+

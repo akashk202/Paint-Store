@@ -1,6 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/exceptions.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../datasources/auth_remote_datasource.dart';
+import '../datasources/auth_remote_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
@@ -8,39 +11,90 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<UserCredential> signInWithEmailAndPassword(String email, String password) {
-    return _remoteDataSource.signInWithEmailAndPassword(email, password);
+  Future<Either<Failure, UserEntity>> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final userModel = await _remoteDataSource.login(email: email, password: password);
+      return Right(userModel);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message, e.code));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> registerUser({
+  Future<Either<Failure, UserEntity>> register({
     required String name,
     required String email,
     required String phone,
     required String password,
     required String address,
-  }) {
-    return _remoteDataSource.registerUser(
-      name: name,
-      email: email,
-      phone: phone,
-      password: password,
-      address: address,
-    );
+  }) async {
+    try {
+      final userModel = await _remoteDataSource.register(
+        name: name,
+        email: email,
+        phone: phone,
+        password: password,
+        address: address,
+      );
+      return Right(userModel);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message, e.code));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<UserCredential?> signInWithGoogle() {
-    return _remoteDataSource.signInWithGoogle();
+  Future<Either<Failure, UserEntity>> googleSignIn() async {
+    try {
+      final userModel = await _remoteDataSource.googleSignIn();
+      return Right(userModel);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message, e.code));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> resetPassword(String email) {
-    return _remoteDataSource.resetPassword(email);
+  Future<Either<Failure, void>> resetPassword({required String email}) async {
+    try {
+      await _remoteDataSource.resetPassword(email: email);
+      return const Right(null);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message, e.code));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> signOut() {
-    return _remoteDataSource.signOut();
+  Future<Either<Failure, void>> logout() async {
+    try {
+      await _remoteDataSource.logout();
+      return const Right(null);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message, e.code));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Either<Failure, UserEntity?> getCurrentUser() {
+    try {
+      final userModel = _remoteDataSource.getCurrentUser();
+      return Right(userModel);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message, e.code));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }
+

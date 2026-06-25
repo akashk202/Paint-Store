@@ -24,4 +24,8 @@ abstract class CartRepository {
     required String size,
     required String price,
   });
+
+  Future<Map<String, Map<String, dynamic>?>> fetchProductDetails(
+    List<String> productKeys,
+  );
 }

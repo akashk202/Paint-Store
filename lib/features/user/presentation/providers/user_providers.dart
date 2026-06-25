@@ -11,10 +11,16 @@ import '../../domain/usecases/update_user_profile.dart';
 import '../../domain/usecases/update_profile_picture.dart';
 import '../../domain/usecases/update_user_password.dart';
 import '../../domain/usecases/get_user_role.dart';
+import '../../domain/usecases/fetch_pending_manager_requests.dart';
+import '../../domain/usecases/approve_manager_request.dart';
+import '../../domain/usecases/deny_manager_request.dart';
+import '../../domain/usecases/fetch_all_users_stream.dart';
+import '../../domain/usecases/update_user_role.dart';
+import '../../domain/usecases/delete_user.dart';
 import 'user_state.dart';
 import 'user_notifier.dart';
 
-final userRemoteDataSourceProvider = Provider<UserRemoteDataSource>((ref) {
+final _userRemoteDataSourceProvider = Provider<UserRemoteDataSource>((ref) {
   return UserRemoteDataSourceImpl(
     auth: FirebaseAuth.instance,
     dbRef: FirebaseDatabase.instance.ref(),
@@ -23,7 +29,7 @@ final userRemoteDataSourceProvider = Provider<UserRemoteDataSource>((ref) {
 });
 
 final userRepositoryProvider = Provider<UserRepository>((ref) {
-  return UserRepositoryImpl(ref.read(userRemoteDataSourceProvider));
+  return UserRepositoryImpl(ref.read(_userRemoteDataSourceProvider));
 });
 
 final getUserProfileUseCaseProvider = Provider<GetUserProfile>((ref) {
@@ -61,6 +67,30 @@ final userNotifierProvider = StateNotifierProvider<UserNotifier, UserState>((ref
   );
 });
 
-final allUsersStreamProvider = StreamProvider<DatabaseEvent>((ref) {
-  return ref.watch(userRemoteDataSourceProvider).fetchAllUsersStream();
+final fetchPendingManagerRequestsUseCaseProvider = Provider<FetchPendingManagerRequests>((ref) {
+  return FetchPendingManagerRequests(ref.read(userRepositoryProvider));
+});
+
+final approveManagerRequestUseCaseProvider = Provider<ApproveManagerRequest>((ref) {
+  return ApproveManagerRequest(ref.read(userRepositoryProvider));
+});
+
+final denyManagerRequestUseCaseProvider = Provider<DenyManagerRequest>((ref) {
+  return DenyManagerRequest(ref.read(userRepositoryProvider));
+});
+
+final fetchAllUsersStreamUseCaseProvider = Provider<FetchAllUsersStream>((ref) {
+  return FetchAllUsersStream(ref.read(userRepositoryProvider));
+});
+
+final updateUserRoleUseCaseProvider = Provider<UpdateUserRole>((ref) {
+  return UpdateUserRole(ref.read(userRepositoryProvider));
+});
+
+final deleteUserUseCaseProvider = Provider<DeleteUser>((ref) {
+  return DeleteUser(ref.read(userRepositoryProvider));
+});
+
+final allUsersStreamProvider = StreamProvider<Map<String, dynamic>>((ref) {
+  return ref.watch(fetchAllUsersStreamUseCaseProvider).call();
 });

@@ -37,7 +37,7 @@ class _AllUsersPageState extends ConsumerState<AllUsersPage> {
 
     if (confirm == true) {
       try {
-        await ref.read(userRemoteDataSourceProvider).updateUserRole(userId, 'Manager');
+        await ref.read(updateUserRoleUseCaseProvider).call(uid: userId, role: 'Manager');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('$userName has been promoted to Manager.')),
@@ -70,7 +70,7 @@ class _AllUsersPageState extends ConsumerState<AllUsersPage> {
               child: Text('Delete', style: GoogleFonts.poppins()),
               onPressed: () async {
                 try {
-                  await ref.read(userRemoteDataSourceProvider).deleteUser(key);
+                  await ref.read(deleteUserUseCaseProvider).call(key);
                   if (!ctx.mounted) return;
                   Navigator.of(ctx).pop();
                   if (!context.mounted) return;
@@ -107,9 +107,8 @@ class _AllUsersPageState extends ConsumerState<AllUsersPage> {
       body: asyncUsers.when(
         loading: () => const Center(child: CircularProgressIndicator(color: Colors.deepOrange)),
         error: (e, st) => Center(child: Text('Error: $e')),
-        data: (snapshot) {
-          final data = snapshot.snapshot.value;
-          if (data == null || data is! Map) {
+        data: (data) {
+          if (data.isEmpty) {
             return const Center(child: CircularProgressIndicator(color: Colors.deepOrange));
           }
 

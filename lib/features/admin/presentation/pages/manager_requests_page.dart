@@ -23,7 +23,7 @@ class _ManagerRequestsPageState extends ConsumerState<ManagerRequestsPage> {
 
   Future<void> _fetchPendingRequests() async {
     try {
-      final requests = await ref.read(userRemoteDataSourceProvider).fetchPendingManagerRequests();
+      final requests = await ref.read(fetchPendingManagerRequestsUseCaseProvider).call();
       if (!mounted) return;
       setState(() {
         _pendingRequests = requests;
@@ -37,7 +37,7 @@ class _ManagerRequestsPageState extends ConsumerState<ManagerRequestsPage> {
   }
 
   Future<void> _approveRequest(String uid) async {
-    await ref.read(userRemoteDataSourceProvider).approveManagerRequest(uid);
+    await ref.read(approveManagerRequestUseCaseProvider).call(uid);
     if (!mounted) return;
     await _fetchPendingRequests();
     if (!mounted) return;
@@ -47,7 +47,7 @@ class _ManagerRequestsPageState extends ConsumerState<ManagerRequestsPage> {
   }
 
   Future<void> _denyRequest(String uid) async {
-    await ref.read(userRemoteDataSourceProvider).denyManagerRequest(uid);
+    await ref.read(denyManagerRequestUseCaseProvider).call(uid);
     if (!mounted) return;
     await _fetchPendingRequests();
     if (!mounted) return;

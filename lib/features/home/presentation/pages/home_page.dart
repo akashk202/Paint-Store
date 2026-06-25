@@ -1,6 +1,7 @@
 import 'package:c_h_p/features/user/presentation/providers/user_providers.dart';
 import 'dart:async';
 import 'package:c_h_p/features/auth/presentation/pages/login_page.dart';
+import 'package:c_h_p/features/auth/presentation/providers/auth_providers.dart';
 import 'package:c_h_p/features/home/data/models/home_product_model.dart';
 import 'package:c_h_p/features/home/domain/entities/home_product_entity.dart';
 import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:c_h_p/features/explore/presentation/pages/color_catalogue_page.dart';
@@ -181,9 +182,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
     );
     if (shouldLogout == true) {
-      // Unsubscribe from user topic before sign out
-      await FCMRemoteDataSource.unsubscribeForUser(FirebaseAuth.instance.currentUser);
-      await FirebaseAuth.instance.signOut();
+      await ref.read(authNotifierProvider.notifier).logout();
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginPage()),

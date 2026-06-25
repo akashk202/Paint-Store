@@ -278,9 +278,9 @@ class _CartPageState extends ConsumerState<CartPage> {
   Future<Map<String, Product?>> _fetchAllProductDetails(
       List<String> productKeys) async {
     final Map<String, Product?> detailsMap = {};
-    // Use the data source via Riverpod provider instead of direct Firebase
-    final dataSource = ref.read(cartRemoteDataSourceProvider);
-    final rawDetails = await dataSource.fetchProductDetails(productKeys);
+    // Use the UseCase via Riverpod provider
+    final fetchProductDetails = ref.read(cartFetchProductDetailsUseCaseProvider);
+    final rawDetails = await fetchProductDetails(productKeys);
     rawDetails.forEach((key, value) {
       if (value != null) {
         try {

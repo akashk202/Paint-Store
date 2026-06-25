@@ -20,9 +20,8 @@ class ManageUsersPage extends ConsumerWidget {
       body: asyncUsers.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
-        data: (snapshot) {
-          final data = snapshot.snapshot.value;
-          if (data == null || data is! Map) {
+        data: (data) {
+          if (data.isEmpty) {
             return Center(
                 child: Text('No users found', style: GoogleFonts.poppins()));
           }
@@ -78,7 +77,7 @@ class ManageUsersPage extends ConsumerWidget {
                   trailing: PopupMenuButton<String>(
                           onSelected: (value) async {
                             try {
-                              await ref.read(userRemoteDataSourceProvider).updateUserRole(uid, value);
+                              await ref.read(updateUserRoleUseCaseProvider).call(uid: uid, role: value);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(

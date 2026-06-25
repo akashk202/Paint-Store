@@ -67,4 +67,11 @@ class CartRepositoryImpl implements CartRepository {
       price: price,
     );
   }
+
+  @override
+  Future<Map<String, Map<String, dynamic>?>> fetchProductDetails(
+    List<String> productKeys,
+  ) {
+    return remote.fetchProductDetails(productKeys);
+  }
 }
