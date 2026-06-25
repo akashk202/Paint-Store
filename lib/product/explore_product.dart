@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../app/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:c_h_p/features/explore/bloc/explore_bloc.dart';
 import 'product_detail_page.dart';
 import 'explore/interior_page.dart';
 import 'explore/exterior_page.dart';
@@ -13,14 +13,14 @@ import '../pages/core/home_page.dart';
 import '../auth/personal_info_page.dart';
 import '../pages/core/cart_page.dart';
 
-class ExploreProductPage extends ConsumerStatefulWidget {
+class ExploreProductPage extends StatefulWidget {
   const ExploreProductPage({super.key});
 
   @override
-  ConsumerState<ExploreProductPage> createState() => _ExploreProductPageState();
+  State<ExploreProductPage> createState() => _ExploreProductPageState();
 }
 
-class _ExploreProductPageState extends ConsumerState<ExploreProductPage> {
+class _ExploreProductPageState extends State<ExploreProductPage> {
   // This list holds three static category images that never refresh.
   static const List<AssetImage> _images = [
     AssetImage("assets/image_b8a96a.jpg"),
@@ -33,9 +33,12 @@ class _ExploreProductPageState extends ConsumerState<ExploreProductPage> {
     super.initState();
     // Pre-cache static images once - they will never refresh
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(exploreVMProvider.notifier).precacheHeroImages(context);
-      // Trigger initial recommended load via ViewModel (idempotent)
-      ref.read(exploreVMProvider.notifier).loadRecommended(limit: 10);
+      // Pre-cache static images
+      for (var img in _images) {
+        precacheImage(img, context);
+      }
+      // Trigger initial recommended load via BLoC (idempotent)
+      context.read<ExploreBloc>().add(const LoadRecommended(limit: 10));
     });
   }
 
@@ -53,9 +56,10 @@ class _ExploreProductPageState extends ConsumerState<ExploreProductPage> {
   }
 
   Widget _buildRecommendedSection() {
-    final vmState = ref.watch(exploreVMProvider);
-    if (vmState.loading) return const SizedBox.shrink();
-    if (vmState.items.isEmpty) return const SizedBox.shrink();
+    return BlocBuilder<ExploreBloc, ExploreState>(
+      builder: (context, vmState) {
+    if (vmState is ExploreLoading) return const SizedBox.shrink();
+    if (vmState is! ExploreLoaded || vmState.items.isEmpty) return const SizedBox.shrink();
     final items = vmState.items;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,6 +124,8 @@ class _ExploreProductPageState extends ConsumerState<ExploreProductPage> {
           ),
         ),
       ],
+    );
+    },
     );
   }
 

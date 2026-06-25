@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:iconsax/iconsax.dart'; // For icons
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:c_h_p/app/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:c_h_p/features/payment/bloc/payment_bloc.dart';
 // Import your Cart Page if needed to clear cart after payment
 // import 'cart_page.dart';
 // Import a success page if you have one
@@ -12,7 +12,7 @@ import 'package:c_h_p/app/providers.dart';
 // Centralize Razorpay Key ID so it can be easily changed later
 const String kRazorpayKeyId = 'rzp_test_RVfRg0s4WjSnkL';
 
-class PaymentPage extends ConsumerStatefulWidget {
+class PaymentPage extends StatefulWidget {
   final int totalAmount; // Amount in smallest currency unit (e.g., paise)
   final String? deliveryAddress;
   final String? fullName;
@@ -33,10 +33,10 @@ class PaymentPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<PaymentPage> createState() => _PaymentPageState();
+  State<PaymentPage> createState() => _PaymentPageState();
 }
 
-class _PaymentPageState extends ConsumerState<PaymentPage> {
+class _PaymentPageState extends State<PaymentPage> {
   late Razorpay _razorpay;
   bool _isProcessing = false; // To show loading state
   bool _paymentCompleted = false;
@@ -78,8 +78,9 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     } catch (_) {}
 
     try {
-      final orderId =
-          await ref.read(paymentVMProvider.notifier).handlePaymentSuccess(
+      // Dispatch the event first
+      final bloc = context.read<PaymentBloc>();
+      bloc.add(HandlePaymentSuccess(
                 paymentId: response.paymentId ?? 'N/A',
                 signature: response.signature,
                 totalAmountPaise: widget.totalAmount,
@@ -89,7 +90,17 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                 fullName: widget.fullName,
                 email: widget.email,
                 phone: widget.phone,
-              );
+              ));
+      // Wait for the result
+      final resultState = await bloc.stream.firstWhere(
+            (state) => state is PaymentCompleted || state is PaymentError,
+          );
+      String? orderId;
+      if (resultState is PaymentCompleted) {
+        orderId = resultState.orderId;
+      } else {
+        throw (resultState as PaymentError).message;
+      }
       if (!mounted) return;
       Navigator.pushReplacement(
         context,

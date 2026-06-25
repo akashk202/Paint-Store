@@ -5,18 +5,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'services/fcm_service.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'services/fcm_background.dart';
 import 'services/notification_service.dart';
 import 'pages/core/notifications_page.dart';
 import 'services/recommendation_service.dart';
 
 import 'firebase_options.dart';
-import 'auth/login_page.dart';
+import 'features/auth/presentation/screens/login_screen.dart';
 import 'widgets/loading_screen.dart';
 import 'widgets/onboarding_screen.dart';
 import 'pages/core/home_page.dart';
 import 'test_helpers.dart';
+import 'injection_container.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +37,8 @@ Future<void> main() async {
     RecommendationService.apiBaseUrl = api;
   }
 
-  runApp(const ProviderScope(child: MyApp()));
+  // Use DI container (Provider + BlocProvider) instead of Riverpod ProviderScope
+  runApp(buildInjectionContainer(child: const MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -176,7 +177,7 @@ class _MyAppState extends State<MyApp> {
     if (user != null) {
       return const HomePage(); // Logged-in user
     } else {
-      return const LoginPage(); // Not logged in
+      return const LoginScreen(); // Not logged in — uses new BLoC-based screen
     }
   }
 }

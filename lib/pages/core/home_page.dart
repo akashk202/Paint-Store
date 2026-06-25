@@ -17,20 +17,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 // Removed: firebase_database direct usage from widget
 import 'package:c_h_p/services/fcm_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:c_h_p/app/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:c_h_p/features/home/bloc/home_bloc.dart';
+import 'package:c_h_p/features/user/bloc/user_bloc.dart';
+import 'package:c_h_p/data/repositories/user_repository.dart';
+import 'package:provider/provider.dart';
 import 'package:c_h_p/pages/visualizer_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 // Removed custom spinning explore icon; using a generic icon instead
 
-class HomePage extends ConsumerStatefulWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
-  ConsumerState<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> {
+class _HomePageState extends State<HomePage> {
   final HomeCoordinator _coordinator = HomeCoordinator();
   final List<Map<String, String>> scrollItems = [
     {
@@ -70,15 +73,15 @@ class _HomePageState extends ConsumerState<HomePage> {
     _searchController.addListener(_onSearchChanged);
     // Kick off products load for search suggestions (idempotent)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(homeVMProvider.notifier).loadAllProducts();
+      context.read<HomeBloc>().add(const LoadAllProducts());
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        ref.read(homeVMProvider.notifier).observeUnread(user.uid);
+        context.read<HomeBloc>().add(ObserveUnread(user.uid));
         // Listen to role changes and update drawer reactively (except fixed Admin email)
         _roleSub?.cancel();
         if (user.email != 'akashkrishna389@gmail.com') {
-          _roleSub = ref
-              .read(userRepositoryProvider)
+          _roleSub = context
+              .read<UserRepository>()
               .userRoleStream(user.uid)
               .listen((role) {
             if (!mounted) return;
@@ -121,10 +124,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _fetchAllProductsForSearch() async {
-    // Legacy method retained for compatibility; now delegates to ViewModel
+    // Delegates to HomeBloc
     try {
-      await ref.read(homeVMProvider.notifier).loadAllProducts();
-      final vmProducts = ref.read(homeVMProvider).products;
+      context.read<HomeBloc>().add(const LoadAllProducts());
+      final state = context.read<HomeBloc>().state;
+      final vmProducts = state is HomeLoaded ? state.products : <Product>[];
       if (mounted) {
         setState(() {
           _productsLoaded = true;
@@ -138,7 +142,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         });
       }
     } catch (e) {
-      debugPrint("Error fetching all products for search via VM: $e");
+      debugPrint("Error fetching all products for search via BLoC: $e");
     }
   }
 
@@ -150,7 +154,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       return;
     }
     try {
-      final repo = ref.read(userRepositoryProvider);
+      final repo = context.read<UserRepository>();
       final role = await repo.fetchUserRole(user.uid);
       if (mounted) setState(() => _userRole = role);
     } catch (e) {
@@ -281,12 +285,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ),
       actions: [
-        Builder(builder: (context) {
-          // Ensure we observe unread for current user
-          if (currentUser != null) {
-            ref.read(homeVMProvider.notifier).observeUnread(currentUser.uid);
-          }
-          final unreadCount = ref.watch(homeVMProvider).unreadCount;
+        BlocBuilder<HomeBloc, HomeState>(builder: (context, homeState) {
+          final unreadCount = homeState is HomeLoaded ? homeState.unreadCount : 0;
           return Stack(
             alignment: Alignment.center,
             children: [
@@ -433,8 +433,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     _showOverlay();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       // Ensure load is initiated
-      ref.read(homeVMProvider.notifier).loadAllProducts();
-      final products = ref.read(homeVMProvider).products;
+      context.read<HomeBloc>().add(const LoadAllProducts());
+      final blocState = context.read<HomeBloc>().state;
+      final products = blocState is HomeLoaded ? blocState.products : <Product>[];
 
       final rawQuery = _searchController.text.trim();
       final q = rawQuery.toLowerCase();

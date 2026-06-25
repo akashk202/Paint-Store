@@ -5,17 +5,17 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:c_h_p/app/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:c_h_p/features/visualizer/bloc/visualizer_bloc.dart';
 
-class VisualizerPage extends ConsumerStatefulWidget {
+class VisualizerPage extends StatefulWidget {
   const VisualizerPage({super.key});
 
   @override
-  ConsumerState<VisualizerPage> createState() => _VisualizerPageState();
+  State<VisualizerPage> createState() => _VisualizerPageState();
 }
 
-class _VisualizerPageState extends ConsumerState<VisualizerPage> {
+class _VisualizerPageState extends State<VisualizerPage> {
   final ImagePicker _picker = ImagePicker();
   XFile? _selected;
 
@@ -27,7 +27,7 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
         setState(() {
           _selected = img;
         });
-        ref.read(visualizerVMProvider.notifier).clearResult();
+        context.read<VisualizerBloc>().add(const ClearVisualizerResult());
       }
     } catch (e) {
       if (!mounted) return;
@@ -39,9 +39,8 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
 
   Future<void> _visualize() async {
     if (_selected == null) return;
-    await ref
-        .read(visualizerVMProvider.notifier)
-        .visualize(File(_selected!.path), scene: 'auto');
+    context.read<VisualizerBloc>().add(
+        RunVisualization(image: File(_selected!.path), scene: 'auto'));
   }
 
   Future<void> _captureFromCamera() async {
@@ -52,7 +51,7 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
         setState(() {
           _selected = img;
         });
-        ref.read(visualizerVMProvider.notifier).clearResult();
+        context.read<VisualizerBloc>().add(const ClearVisualizerResult());
       }
     } catch (e) {
       if (!mounted) return;
@@ -63,8 +62,8 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
   }
 
   void _openColorPicker() async {
-    final vm = ref.read(visualizerVMProvider.notifier);
-    final current = ref.read(visualizerVMProvider).color;
+    final bloc = context.read<VisualizerBloc>();
+    final current = bloc.state.color;
     Color temp = current;
     await showDialog(
       context: context,
@@ -85,7 +84,7 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
               onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           FilledButton(
               onPressed: () {
-                vm.setColor(temp);
+                bloc.add(SetVisualizerColor(temp));
                 Navigator.pop(ctx);
               },
               child: const Text('Apply')),
@@ -96,11 +95,15 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final vmState = ref.watch(visualizerVMProvider);
-    final imageWidget = vmState.resultUrl != null
+    return BlocBuilder<VisualizerBloc, VisualizerState>(
+      builder: (context, vmState) {
+    final processing = vmState is VisualizerProcessing;
+    final resultUrl = vmState is VisualizerSuccess ? vmState.resultUrl : null;
+    final error = vmState is VisualizerError ? vmState.message : null;
+    final imageWidget = resultUrl != null
         ? ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.network(vmState.resultUrl!, fit: BoxFit.contain),
+            child: Image.network(resultUrl!, fit: BoxFit.contain),
           )
         : _selected == null
             ? Center(
@@ -137,7 +140,7 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
           padding: const EdgeInsets.all(16.0),
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
-            child: vmState.processing
+            child: processing
                 ? const Center(child: CircularProgressIndicator())
                 : Container(
                     width: double.infinity,
@@ -148,9 +151,9 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
                     ),
                     alignment: Alignment.center,
                     padding: const EdgeInsets.all(10),
-                    child: vmState.error != null
+                    child: error != null
                         ? Text(
-                            vmState.error!,
+                            error,
                             style: GoogleFonts.poppins(color: Colors.red),
                             textAlign: TextAlign.center,
                           )
@@ -170,7 +173,7 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
                 alignment: Alignment.bottomLeft,
                 child: FloatingActionButton.small(
                   heroTag: 'gallery',
-                  onPressed: vmState.processing ? null : _pickFromGallery,
+                  onPressed: processing ? null : _pickFromGallery,
                   backgroundColor: Colors.white,
                   shape: const CircleBorder(),
                   child: const Icon(Iconsax.gallery, color: Colors.black87),
@@ -178,14 +181,14 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
               ),
               FloatingActionButton(
                 heroTag: 'camera',
-                onPressed: vmState.processing ? null : _captureFromCamera,
+                onPressed: processing ? null : _captureFromCamera,
                 backgroundColor: Colors.deepOrange,
                 child: const Icon(Iconsax.camera, color: Colors.white),
               ),
               Align(
                 alignment: Alignment.bottomRight,
                 child: FilledButton.icon(
-                  onPressed: (_selected != null && !vmState.processing)
+                  onPressed: (_selected != null && !processing)
                       ? _visualize
                       : null,
                   icon: const Icon(Iconsax.brush_2),
@@ -199,6 +202,8 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
           ),
         ),
       ),
+    );
+    },
     );
   }
 }

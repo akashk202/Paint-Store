@@ -4,17 +4,17 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:c_h_p/app/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:c_h_p/features/notifications/bloc/notifications_bloc.dart';
 
-class NotificationsPage extends ConsumerStatefulWidget {
+class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
 
   @override
-  ConsumerState<NotificationsPage> createState() => _NotificationsPageState();
+  State<NotificationsPage> createState() => _NotificationsPageState();
 }
 
-class _NotificationsPageState extends ConsumerState<NotificationsPage> {
+class _NotificationsPageState extends State<NotificationsPage> {
   bool _animatedOnce = false;
   @override
   void initState() {
@@ -22,9 +22,9 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Start VM and mark all as read
-        ref.read(notificationsVMProvider.notifier).start(currentUser.uid);
-        ref.read(notificationsVMProvider.notifier).markAllRead(currentUser.uid);
+        // Start BLoC and mark all as read
+        context.read<NotificationsBloc>().add(StartNotifications(currentUser.uid));
+        context.read<NotificationsBloc>().add(MarkAllRead(currentUser.uid));
         if (mounted) setState(() => _animatedOnce = true);
       });
     }
@@ -53,7 +53,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     );
 
     if (shouldClear == true) {
-      await ref.read(notificationsVMProvider.notifier).clearAll(uid);
+      context.read<NotificationsBloc>().add(ClearAllNotifications(uid));
     }
   }
 
@@ -69,7 +69,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     }
 
     final uid = currentUser.uid;
-    final state = ref.watch(notificationsVMProvider);
+    final state = context.read<NotificationsBloc>().state;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -89,7 +89,12 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
           ),
         ],
       ),
-      body: _buildList(context, state.entries, uid),
+      body: BlocBuilder<NotificationsBloc, NotificationsState>(
+        builder: (context, state) {
+          final entries = state is NotificationsLoaded ? state.entries : [];
+          return _buildList(context, entries, uid);
+        },
+      ),
     );
   }
 
@@ -134,13 +139,11 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                 final data = notificationData;
                 final sig =
                     '${(data['type'] ?? '').toString()}|${(data['timestamp'] ?? 0).toString()}|${(data['message'] ?? '').toString()}';
-                await ref
-                    .read(notificationsVMProvider.notifier)
-                    .dismissGlobal(uid, sig);
+                context.read<NotificationsBloc>().add(
+                    DismissGlobalNotification(uid: uid, signature: sig));
               } else {
-                await ref
-                    .read(notificationsVMProvider.notifier)
-                    .deletePersonal(uid, notificationKey);
+                context.read<NotificationsBloc>().add(
+                    DeletePersonalNotification(uid: uid, key: notificationKey));
               }
               return true;
             } catch (_) {

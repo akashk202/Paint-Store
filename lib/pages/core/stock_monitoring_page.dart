@@ -3,27 +3,26 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../model/product_model.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:c_h_p/app/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:c_h_p/features/stock/bloc/stock_bloc.dart';
 
-class StockMonitoringPage extends ConsumerStatefulWidget {
+class StockMonitoringPage extends StatefulWidget {
   const StockMonitoringPage({super.key});
 
   @override
-  ConsumerState<StockMonitoringPage> createState() =>
+  State<StockMonitoringPage> createState() =>
       _StockMonitoringPageState();
 }
 
-class _StockMonitoringPageState extends ConsumerState<StockMonitoringPage> {
+class _StockMonitoringPageState extends State<StockMonitoringPage> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
   // Updates the stock for a given product in Firebase.
   Future<void> _updateStock(String productKey, int newStock) async {
     try {
-      await ref
-          .read(stockVMProvider.notifier)
-          .updateStock(productKey, newStock);
+      context.read<StockBloc>().add(
+          UpdateStock(productKey: productKey, newStock: newStock));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -95,8 +94,9 @@ class _StockMonitoringPageState extends ConsumerState<StockMonitoringPage> {
 
   @override
   Widget build(BuildContext context) {
-    final stockState = ref.watch(stockVMProvider);
-    return Scaffold(
+    return BlocBuilder<StockBloc, StockState>(
+      builder: (context, stockState) {
+      return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
         title: Text("Monitor Stock",
@@ -128,16 +128,17 @@ class _StockMonitoringPageState extends ConsumerState<StockMonitoringPage> {
         ),
       ),
       body: () {
-        if (stockState.loading && stockState.products.isEmpty) {
+        if (stockState is StockLoading) {
           return const Center(
               child: CircularProgressIndicator(color: Colors.deepOrange));
         }
-        if (stockState.products.isEmpty) {
+        final products = stockState is StockLoaded ? stockState.products : <Product>[];
+        if (products.isEmpty) {
           return const Center(child: Text('No products found.'));
         }
 
         final Map<String, Map<String, List<Product>>> categorizedStock = {};
-        for (final product in stockState.products) {
+        for (final product in products) {
           if (_searchQuery.isEmpty ||
               product.name.toLowerCase().contains(_searchQuery)) {
             final String categoryKey = product.category ?? 'Uncategorized';
@@ -163,6 +164,8 @@ class _StockMonitoringPageState extends ConsumerState<StockMonitoringPage> {
           }).toList(),
         );
       }(),
+    );
+    },
     );
   }
 

@@ -1,36 +1,35 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart'; // ⭐ UI: Added for animations
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
-import 'package:c_h_p/app/providers.dart';
+import 'package:c_h_p/features/report/bloc/report_bloc.dart';
 
 //==============================================================================
 // Page for Users to SUBMIT an Issue
 //==============================================================================
 
-class ReportIssuePage extends ConsumerStatefulWidget {
+class ReportIssuePage extends StatefulWidget {
   const ReportIssuePage({super.key});
 
   @override
-  ConsumerState<ReportIssuePage> createState() => _ReportIssuePageState();
+  State<ReportIssuePage> createState() => _ReportIssuePageState();
 }
 
-class _ReportIssuePageState extends ConsumerState<ReportIssuePage> {
+class _ReportIssuePageState extends State<ReportIssuePage> {
   final _formKey = GlobalKey<FormState>();
   final _issueController = TextEditingController();
-  final User? _currentUser = FirebaseAuth.instance.currentUser;
+  final currentUser = FirebaseAuth.instance.currentUser;
   bool _isLoading = false;
 
   Future<void> _submitReport() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      await ref
-          .read(reportVMProvider.notifier)
-          .submitIssue(_issueController.text.trim());
+      context.read<ReportBloc>().add(
+          SubmitIssue(_issueController.text.trim()));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -73,7 +72,7 @@ class _ReportIssuePageState extends ConsumerState<ReportIssuePage> {
                       fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Text(
-                  "You are reporting as: ${_currentUser?.displayName ?? _currentUser?.email}",
+                  "You are reporting as: ${currentUser?.displayName ?? currentUser?.email}",
                   style: GoogleFonts.poppins(color: Colors.grey.shade600)),
               const SizedBox(height: 32),
               TextFormField(
@@ -119,21 +118,20 @@ class _ReportIssuePageState extends ConsumerState<ReportIssuePage> {
 // Page for Admins to VIEW all Issues
 //==============================================================================
 
-class ViewReportsPage extends ConsumerStatefulWidget {
+class ViewReportsPage extends StatefulWidget {
   const ViewReportsPage({super.key});
 
   @override
-  ConsumerState<ViewReportsPage> createState() => _ViewReportsPageState();
+  State<ViewReportsPage> createState() => _ViewReportsPageState();
 }
 
-class _ViewReportsPageState extends ConsumerState<ViewReportsPage> {
+class _ViewReportsPageState extends State<ViewReportsPage> {
   // ⭐ FIX: Restored the specific issue text to the notification
   Future<void> _resolveReport(
       String reportKey, String userId, String issueText) async {
     try {
-      await ref
-          .read(reportVMProvider.notifier)
-          .resolve(reportKey: reportKey, userId: userId, issueText: issueText);
+      context.read<ReportBloc>().add(
+          ResolveReport(reportKey: reportKey, userId: userId, issueText: issueText));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -160,7 +158,7 @@ class _ViewReportsPageState extends ConsumerState<ViewReportsPage> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: StreamBuilder<List<MapEntry<String, Map<String, dynamic>>>>(
-        stream: ref.read(reportVMProvider.notifier).reportsStream(),
+        stream: context.read<ReportBloc>().reportsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

@@ -4,18 +4,18 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'payment_page.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:c_h_p/app/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:c_h_p/features/checkout/bloc/checkout_bloc.dart';
 
-class CheckoutFormPage extends ConsumerStatefulWidget {
+class CheckoutFormPage extends StatefulWidget {
   final int totalAmountPaise;
   const CheckoutFormPage({super.key, required this.totalAmountPaise});
 
   @override
-  ConsumerState<CheckoutFormPage> createState() => _CheckoutFormPageState();
+  State<CheckoutFormPage> createState() => _CheckoutFormPageState();
 }
 
-class _CheckoutFormPageState extends ConsumerState<CheckoutFormPage> {
+class _CheckoutFormPageState extends State<CheckoutFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
@@ -32,9 +32,12 @@ class _CheckoutFormPageState extends ConsumerState<CheckoutFormPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(checkoutVMProvider.notifier).prefillFromAuthAndProfile();
-      final s = ref.read(checkoutVMProvider);
-      if (mounted) {
+      context.read<CheckoutBloc>().add(const PrefillCheckoutInfo());
+      // Wait for bloc to emit a loaded state via BlocListener pattern
+      // For simplicity, listen to state changes using a delayed approach
+      await Future.delayed(const Duration(milliseconds: 500));
+      final s = context.read<CheckoutBloc>().state;
+      if (mounted && s is CheckoutInfoLoaded) {
         setState(() {
           if (s.name.isNotEmpty) _nameCtrl.text = s.name;
           if (s.email.isNotEmpty) _emailCtrl.text = s.email;
@@ -42,6 +45,8 @@ class _CheckoutFormPageState extends ConsumerState<CheckoutFormPage> {
           if (s.address.isNotEmpty) _addressCtrl.text = s.address;
           _loadingProfile = false;
         });
+      } else if (mounted) {
+        setState(() => _loadingProfile = false);
       }
     });
   }
@@ -90,7 +95,7 @@ class _CheckoutFormPageState extends ConsumerState<CheckoutFormPage> {
       _lat = pos.latitude;
       _lng = pos.longitude;
       // Store into VM state for later save
-      ref.read(checkoutVMProvider.notifier).setLatLng(_lat, _lng);
+      context.read<CheckoutBloc>().add(SetLatLng(lat: _lat, lng: _lng));
       final placemarks =
           await placemarkFromCoordinates(pos.latitude, pos.longitude);
       if (!mounted) return;
@@ -124,12 +129,14 @@ class _CheckoutFormPageState extends ConsumerState<CheckoutFormPage> {
   Future<void> _proceedToPayment() async {
     if (!_formKey.currentState!.validate()) return;
     try {
-      await ref.read(checkoutVMProvider.notifier).saveProfile(
-            fullName: _nameCtrl.text.trim(),
-            phone: _phoneCtrl.text.trim(),
-            email: _emailCtrl.text.trim(),
-            address: _addressCtrl.text.trim(),
-          );
+      await Future.wait([
+        Future(() => context.read<CheckoutBloc>().add(SaveProfile(
+              fullName: _nameCtrl.text.trim(),
+              phone: _phoneCtrl.text.trim(),
+              email: _emailCtrl.text.trim(),
+              address: _addressCtrl.text.trim(),
+            ))),
+      ]);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

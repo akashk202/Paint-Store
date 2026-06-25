@@ -9,8 +9,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:c_h_p/app/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:c_h_p/features/cart/bloc/cart_bloc.dart';
 
 // Ensure these import paths match your project structure
 import '../../model/product_model.dart';
@@ -45,14 +45,14 @@ class CartItemDetails {
   List<PackSize> get availableSizes => productDetails?.packSizes ?? [];
 }
 
-class CartPage extends ConsumerStatefulWidget {
+class CartPage extends StatefulWidget {
   const CartPage({super.key});
 
   @override
-  ConsumerState<CartPage> createState() => _CartPageState();
+  State<CartPage> createState() => _CartPageState();
 }
 
-class _CartPageState extends ConsumerState<CartPage> {
+class _CartPageState extends State<CartPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
@@ -95,11 +95,10 @@ class _CartPageState extends ConsumerState<CartPage> {
     if (_auth.currentUser == null) return;
     _justQuantityChange = true;
     if (newQuantity > 0) {
-      ref
-          .read(cartVMProvider.notifier)
-          .updateQuantity(productKey: productKey, quantity: newQuantity);
+      context.read<CartBloc>().add(UpdateCartQuantity(
+          productKey: productKey, quantity: newQuantity));
     } else {
-      ref.read(cartVMProvider.notifier).removeItem(productKey);
+      context.read<CartBloc>().add(RemoveCartItem(productKey));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Item removed"), duration: Duration(seconds: 1)));
@@ -127,11 +126,11 @@ class _CartPageState extends ConsumerState<CartPage> {
 
   void _updateSelectedSize(String productKey, PackSize newPackSize) {
     if (_auth.currentUser == null) return;
-    ref.read(cartVMProvider.notifier).changeSize(
+    context.read<CartBloc>().add(ChangeCartSize(
           productKey: productKey,
           size: newPackSize.size,
           price: newPackSize.price,
-        );
+        ));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -159,7 +158,7 @@ class _CartPageState extends ConsumerState<CartPage> {
             style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
             child: const Text("Clear All"),
             onPressed: () {
-              ref.read(cartVMProvider.notifier).clearCart();
+              context.read<CartBloc>().add(const ClearCart());
               Navigator.of(ctx).pop();
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -185,26 +184,25 @@ class _CartPageState extends ConsumerState<CartPage> {
       // AppBar is built dynamically
       body: currentUser == null
           ? _buildLoggedOutState()
-          : Builder(builder: (context) {
-              final cartState = ref.watch(cartVMProvider);
-              if (cartState.loading && cartState.items.isEmpty) {
+          : BlocBuilder<CartBloc, CartState>(
+              builder: (context, cartState) {
+              if (cartState is CartLoading) {
                 return Scaffold(
                     appBar: _buildAppBar(false),
                     body: _buildCartLoadingShimmer(3));
               }
-              if (cartState.error != null) {
+              if (cartState is CartError) {
                 return Scaffold(
                     appBar: _buildAppBar(false),
                     body: Center(
-                        child: Text("Error: ${cartState.error}",
+                        child: Text("Error: ${(cartState).message}",
                             style: TextStyle(color: Colors.red))));
               }
-              final cartMap = cartState.items;
-              final bool isCartEmpty = cartMap.isEmpty;
-              if (isCartEmpty) {
+              if (cartState is! CartLoaded || cartState.items.isEmpty) {
                 return Scaffold(
                     appBar: _buildAppBar(false), body: _buildEmptyCart());
               }
+              final cartMap = cartState.items;
               final productKeys = cartMap.keys.toList();
               return FutureBuilder<Map<String, Product?>>(
                 future: _getProductDetailsCached(productKeys),
@@ -494,7 +492,7 @@ class _CartPageState extends ConsumerState<CartPage> {
       key: Key(item.productKey + currentSelectedPackSize.size),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
-        ref.read(cartVMProvider.notifier).removeItem(item.productKey);
+        context.read<CartBloc>().add(RemoveCartItem(item.productKey));
       },
       background: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20),

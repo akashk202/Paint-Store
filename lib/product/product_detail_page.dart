@@ -7,18 +7,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:c_h_p/pages/core/cart_page.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:c_h_p/app/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:c_h_p/features/cart/bloc/cart_bloc.dart';
 
-class ProductDetailPage extends ConsumerStatefulWidget {
+class ProductDetailPage extends StatefulWidget {
   final Product product;
   const ProductDetailPage({super.key, required this.product});
 
   @override
-  ConsumerState<ProductDetailPage> createState() => _ProductDetailPageState();
+  State<ProductDetailPage> createState() => _ProductDetailPageState();
 }
 
-class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
+class _ProductDetailPageState extends State<ProductDetailPage> {
   bool _precached = false;
   PackSize? _selectedPack;
 
@@ -81,13 +81,13 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     }
 
     try {
-      await ref.read(cartVMProvider.notifier).addOrUpdateItem(
+      context.read<CartBloc>().add(AddOrUpdateCartItem(
             productKey: widget.product.key,
             name: widget.product.name,
             mainImageUrl: widget.product.mainImageUrl,
             size: selected.size,
             price: selected.price,
-          );
+          ));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content:
