@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:c_h_p/pages/view_painters_page.dart';
-import 'package:c_h_p/pages/color_catalogue_page.dart';
-import 'package:c_h_p/product/latest_colors_page.dart';
-import 'package:c_h_p/pages/paint_calculator_page.dart';
-import 'package:c_h_p/product/explore_product.dart';
+import 'package:c_h_p/features/painters/presentation/pages/view_painters_page.dart';
+import 'package:c_h_p/features/explore/presentation/pages/color_catalogue_page.dart';
+import 'package:c_h_p/features/product/presentation/pages/latest_colors_page.dart';
+import 'package:c_h_p/features/visualizer/presentation/pages/paint_calculator_page.dart';
+import 'package:c_h_p/features/explore/presentation/pages/explore_page.dart';
 
 class HomeCoordinator {
   void onCarouselTap(BuildContext context, Map<String, String> item) {

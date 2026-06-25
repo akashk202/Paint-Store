@@ -1,6 +1,8 @@
-/// Abstract contract for checkout operations.
+import '../entities/checkout_profile.dart';
+
 abstract class CheckoutRepository {
-  Future<Map<String, dynamic>?> fetchUserProfile();
+  Future<CheckoutProfile?> fetchUserProfile();
+  
   Future<void> updateUserProfile({
     required String fullName,
     required String phone,
@@ -9,5 +11,6 @@ abstract class CheckoutRepository {
     double? lat,
     double? lng,
   });
+
   Future<List<String>> fetchCartItemNames();
 }

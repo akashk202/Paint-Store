@@ -1,16 +1,20 @@
-import 'package:c_h_p/features/cart/data/datasources/cart_remote_data_source.dart';
-import 'package:c_h_p/features/cart/domain/repositories/cart_repository.dart';
+import '../../domain/entities/cart_item.dart';
+import '../../domain/repositories/cart_repository.dart';
+import '../datasources/cart_remote_datasource.dart';
+import '../models/cart_item_model.dart';
 
-/// Concrete implementation of [CartRepository].
-/// Delegates all operations to [CartRemoteDataSource].
 class CartRepositoryImpl implements CartRepository {
-  final CartRemoteDataSource remoteDataSource;
+  final CartRemoteDataSource remote;
 
-  CartRepositoryImpl({required this.remoteDataSource});
+  CartRepositoryImpl(this.remote);
 
   @override
-  Stream<Map<String, Map<String, dynamic>>> cartStream() {
-    return remoteDataSource.cartStream();
+  Stream<List<CartItem>> cartStream() {
+    return remote.cartStream().map((map) {
+      return map.entries.map((e) {
+        return CartItemModel.fromMap(e.key, e.value);
+      }).toList();
+    });
   }
 
   @override
@@ -18,7 +22,7 @@ class CartRepositoryImpl implements CartRepository {
     required String productKey,
     required int quantity,
   }) {
-    return remoteDataSource.updateQuantity(
+    return remote.updateQuantity(
       productKey: productKey,
       quantity: quantity,
     );
@@ -30,7 +34,7 @@ class CartRepositoryImpl implements CartRepository {
     required String size,
     required String price,
   }) {
-    return remoteDataSource.changeSize(
+    return remote.changeSize(
       productKey: productKey,
       size: size,
       price: price,
@@ -39,26 +43,26 @@ class CartRepositoryImpl implements CartRepository {
 
   @override
   Future<void> removeItem(String productKey) {
-    return remoteDataSource.removeItem(productKey);
+    return remote.removeItem(productKey);
   }
 
   @override
   Future<void> clearCart() {
-    return remoteDataSource.clearCart();
+    return remote.clearCart();
   }
 
   @override
   Future<void> addOrUpdateItem({
     required String productKey,
     required String name,
-    required String mainImageUrl,
+    required String imageUrl,
     required String size,
     required String price,
   }) {
-    return remoteDataSource.addOrUpdateItem(
+    return remote.addOrUpdateItem(
       productKey: productKey,
       name: name,
-      mainImageUrl: mainImageUrl,
+      imageUrl: imageUrl,
       size: size,
       price: price,
     );

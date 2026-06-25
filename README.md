@@ -12,7 +12,7 @@ This is a real-world Flutter app I’m building for a paint retail experience. Y
 What you’ll find here
 - Flutter (stable)
 - Firebase Auth + Realtime Database
-- Riverpod (MVVM)
+- Riverpod + Clean Implementation
 - A modern, responsive UI (Google Fonts, Iconsax, Shimmer, Cached Network Image, flutter_animate)
 - Integration and widget tests where they add real value
 
@@ -58,11 +58,12 @@ Here are a few screens from the app.
 - Flutter (Dart)
 - Firebase Authentication
 - Firebase Realtime Database
-- Riverpod for state management (MVVM)
+- Riverpod for state management.
+- Clean Architecture for Scalaling and deb
 - Targets Android/iOS/Web
 
-## Architecture: MVVM with Riverpod
-I moved this project to MVVM to keep UI simple and logic testable. Views are declarative and focused on rendering. ViewModels own state and orchestration. Repositories/services isolate IO and side‑effects.
+## Architecture:  Riverpod + Clean
+I moved this project to Clean to keep UI simple and logic testable. Views are declarative and focused on rendering. ViewModels own state and orchestration. Repositories/services isolate IO and side‑effects.
 
 - **Model**: Domain/data models (`lib/model/`)
 - **View**: Flutter UI screens (`lib/pages/`, `lib/widgets/`)
@@ -126,7 +127,7 @@ flutter analyze
 The app uses Firebase Auth and Realtime Database. I keep the setup straightforward:
 
 1) Create a Firebase project
-- Add Android, iOS (optional), and Web (optional) apps to the project
+- Add Android, and Web apps to the project
 
 2) Configure platforms
 - Android: `android/app/google-services.json` + update `applicationId`
@@ -170,7 +171,6 @@ Example rules (see `database.rules.json` for the latest):
 }
 ```
 
-Note: You’ll want to tighten these for production based on your exact data model.
 
 ## Running the App
 ```
@@ -261,7 +261,7 @@ Notes for this repository
 - Firebase integration is required for login and data.
 
 ## For Hiring Managers
-- I refactored this app to MVVM/Riverpod to keep it scalable and testable as it grows
+- I refactored this app to Riverpod/Clean to keep it scalable and testable as it grows
 - Comfortable with Firebase end-to-end: Auth, Realtime Database, and rules
 - I keep quality gates in CI (analyze/tests) to catch issues early
 - I care about UX polish: animation, caching, modern component libraries

@@ -4,19 +4,19 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'services/fcm_service.dart';
-import 'services/fcm_background.dart';
-import 'services/notification_service.dart';
-import 'pages/core/notifications_page.dart';
-import 'services/recommendation_service.dart';
+import 'package:c_h_p/features/notifications/data/datasources/fcm_remote_datasource.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:c_h_p/features/notifications/data/datasources/fcm_background.dart';
+import 'package:c_h_p/features/notifications/data/datasources/notification_remote_datasource.dart';
+import 'package:c_h_p/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:c_h_p/features/explore/data/datasources/recommendation_remote_datasource.dart';
 
 import 'firebase_options.dart';
-import 'features/auth/presentation/screens/login_screen.dart';
-import 'widgets/loading_screen.dart';
-import 'widgets/onboarding_screen.dart';
-import 'pages/core/home_page.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'package:c_h_p/core/presentation/pages/loading_screen.dart';
+import 'package:c_h_p/core/presentation/pages/onboarding_screen.dart';
+import 'package:c_h_p/features/home/presentation/pages/home_page.dart';
 import 'test_helpers.dart';
-import 'injection_container.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,11 +34,10 @@ Future<void> main() async {
 
   final api = const String.fromEnvironment('RECO_API');
   if (api.isNotEmpty) {
-    RecommendationService.apiBaseUrl = api;
+    RecommendationRemoteDataSource.apiBaseUrl = api;
   }
 
-  // Use DI container (Provider + BlocProvider) instead of Riverpod ProviderScope
-  runApp(buildInjectionContainer(child: const MyApp()));
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -76,20 +75,20 @@ class _MyAppState extends State<MyApp> {
     });
     // Keep FCM registration updated with auth state
     FirebaseAuth.instance.authStateChanges().listen((user) {
-      FCMService.updateForUser(user);
+      FCMRemoteDataSource.updateForUser(user);
     });
     // Foreground: show a local notification
-    FCMService.listenForegroundMessages(onMessage: (m) {
+    FCMRemoteDataSource.listenForegroundMessages(onMessage: (m) {
       final title = m.notification?.title ?? 'Notification';
       final body = m.notification?.body ?? '';
       final payload = m.data.isNotEmpty ? m.data.toString() : null;
-      NotificationService.instance.showForegroundNotification(
+      NotificationRemoteDataSource.instance.showForegroundNotification(
           title: title, body: body, payload: payload);
     });
 
     // Deep-link when user taps an FCM notification from background
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      NotificationService.instance.navigatorKey.currentState?.push(
+      NotificationRemoteDataSource.instance.navigatorKey.currentState?.push(
         MaterialPageRoute(builder: (_) => const NotificationsPage()),
       );
     });
@@ -97,9 +96,9 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _initServices() async {
     try {
-      await NotificationService.instance.init();
-      await FCMService.requestPermission();
-      await FCMService.updateForUser(FirebaseAuth.instance.currentUser);
+      await NotificationRemoteDataSource.instance.init();
+      await FCMRemoteDataSource.requestPermission();
+      await FCMRemoteDataSource.updateForUser(FirebaseAuth.instance.currentUser);
     } catch (e) {
       debugPrint('Startup service init error: $e');
     }
@@ -108,7 +107,7 @@ class _MyAppState extends State<MyApp> {
   // Precache frequently used asset images once app has a build context
   void _precacheAppImages() {
     if (_assetsPrecached) return;
-    final ctx = NotificationService.instance.navigatorKey.currentContext;
+    final ctx = NotificationRemoteDataSource.instance.navigatorKey.currentContext;
     if (ctx == null) {
       // Try again on next frame if the navigator context isn't ready yet
       WidgetsBinding.instance.addPostFrameCallback((_) => _precacheAppImages());
@@ -167,7 +166,7 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      navigatorKey: NotificationService.instance.navigatorKey,
+      navigatorKey: NotificationRemoteDataSource.instance.navigatorKey,
       home: _isFirstTime! ? const OnboardingScreen() : _getNextPage(),
     );
   }
@@ -177,7 +176,7 @@ class _MyAppState extends State<MyApp> {
     if (user != null) {
       return const HomePage(); // Logged-in user
     } else {
-      return const LoginScreen(); // Not logged in — uses new BLoC-based screen
+      return const LoginPage(); // Not logged in
     }
   }
 }

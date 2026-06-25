@@ -1,15 +1,27 @@
-import 'package:c_h_p/features/checkout/data/datasources/checkout_remote_data_source.dart';
-import 'package:c_h_p/features/checkout/domain/repositories/checkout_repository.dart';
+import '../../domain/entities/checkout_profile.dart';
+import '../../domain/repositories/checkout_repository.dart';
+import '../datasources/checkout_remote_datasource.dart';
+import '../models/checkout_profile_model.dart';
 
-/// Concrete implementation of [CheckoutRepository].
 class CheckoutRepositoryImpl implements CheckoutRepository {
-  final CheckoutRemoteDataSource remoteDataSource;
+  final CheckoutRemoteDataSource remote;
 
-  CheckoutRepositoryImpl({required this.remoteDataSource});
+  CheckoutRepositoryImpl(this.remote);
 
   @override
-  Future<Map<String, dynamic>?> fetchUserProfile() {
-    return remoteDataSource.fetchUserProfile();
+  Future<CheckoutProfile?> fetchUserProfile() async {
+    final signedInUser = remote.fetchSignedInUserDetails();
+    final profileMap = await remote.fetchUserProfile();
+
+    if (profileMap == null &&
+        signedInUser.values.every((value) => value.isEmpty)) {
+      return null;
+    }
+
+    return CheckoutProfileModel.fromRemote(
+      signedInUser: signedInUser,
+      profileMap: profileMap,
+    );
   }
 
   @override
@@ -21,7 +33,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     double? lat,
     double? lng,
   }) {
-    return remoteDataSource.updateUserProfile(
+    return remote.updateUserProfile(
       fullName: fullName,
       phone: phone,
       email: email,
@@ -33,6 +45,6 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
 
   @override
   Future<List<String>> fetchCartItemNames() {
-    return remoteDataSource.fetchCartItemNames();
+    return remote.fetchCartItemNames();
   }
 }
