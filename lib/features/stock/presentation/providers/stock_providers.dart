@@ -8,12 +8,12 @@ import '../../domain/usecases/stock_usecases.dart';
 import 'stock_state.dart';
 import 'stock_notifier.dart';
 
-final stockRemoteDataSourceProvider = Provider<StockRemoteDataSource>((ref) {
+final _stockRemoteDataSourceProvider = Provider<StockRemoteDataSource>((ref) {
   return StockRemoteDataSourceImpl(FirebaseDatabase.instance.ref());
 });
 
 final stockRepositoryProvider = Provider<StockRepository>((ref) {
-  return StockRepositoryImpl(ref.read(stockRemoteDataSourceProvider));
+  return StockRepositoryImpl(ref.read(_stockRemoteDataSourceProvider));
 });
 
 final watchStockUseCaseProvider = Provider<WatchStock>((ref) {

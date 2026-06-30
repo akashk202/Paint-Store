@@ -6,12 +6,12 @@ import '../../domain/repositories/visualizer_repository.dart';
 import '../../domain/usecases/visualizer_usecases.dart';
 import 'visualizer_notifier.dart';
 
-final visualizerRemoteDataSourceProvider = Provider<VisualizerRemoteDataSource>((ref) {
+final _visualizerRemoteDataSourceProvider = Provider<VisualizerRemoteDataSource>((ref) {
   return VisualizerRemoteDataSourceImpl();
 });
 
 final visualizerRepositoryProvider = Provider<VisualizerRepository>((ref) {
-  return VisualizerRepositoryImpl(ref.read(visualizerRemoteDataSourceProvider));
+  return VisualizerRepositoryImpl(ref.read(_visualizerRemoteDataSourceProvider));
 });
 
 final visualizeImageUseCaseProvider = Provider<VisualizeImage>((ref) {

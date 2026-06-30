@@ -1,4 +1,3 @@
-import '../../data/models/product_model.dart';
 import '../repositories/product_repository.dart';
 
 class UpdateProduct {

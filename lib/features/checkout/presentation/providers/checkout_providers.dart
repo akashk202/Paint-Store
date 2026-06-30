@@ -10,7 +10,7 @@ import '../../domain/usecases/update_user_profile.dart';
 import 'checkout_state.dart';
 import 'checkout_notifier.dart';
 
-final checkoutRemoteDataSourceProvider =
+final _checkoutRemoteDataSourceProvider =
     Provider<CheckoutRemoteDataSource>((ref) {
   return CheckoutRemoteDataSourceImpl(
     db: FirebaseDatabase.instance,
@@ -19,7 +19,7 @@ final checkoutRemoteDataSourceProvider =
 });
 
 final checkoutRepositoryProvider = Provider<CheckoutRepository>((ref) {
-  final dataSource = ref.read(checkoutRemoteDataSourceProvider);
+  final dataSource = ref.read(_checkoutRemoteDataSourceProvider);
   return CheckoutRepositoryImpl(dataSource);
 });
 

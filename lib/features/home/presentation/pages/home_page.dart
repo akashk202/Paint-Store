@@ -19,7 +19,6 @@ import 'package:c_h_p/features/home/presentation/widgets/unread_badge.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // Removed: firebase_database direct usage from widget
-import 'package:c_h_p/features/notifications/data/datasources/fcm_remote_datasource.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:c_h_p/features/visualizer/presentation/pages/visualizer_page.dart';

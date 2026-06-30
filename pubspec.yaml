@@ -50,6 +50,9 @@ dependencies:
 
   path: any
   uuid: any
+  dartz: ^0.10.1
+  equatable: ^2.0.8
+  dio: ^5.10.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

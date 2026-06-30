@@ -7,12 +7,12 @@ import '../../domain/repositories/painters_repository.dart';
 import '../../domain/usecases/painters_usecases.dart';
 import 'painters_notifier.dart';
 
-final paintersRemoteDataSourceProvider = Provider<PaintersRemoteDataSource>((ref) {
+final _paintersRemoteDataSourceProvider = Provider<PaintersRemoteDataSource>((ref) {
   return PaintersRemoteDataSourceImpl(FirebaseDatabase.instance.ref());
 });
 
 final paintersRepositoryProvider = Provider<PaintersRepository>((ref) {
-  return PaintersRepositoryImpl(ref.read(paintersRemoteDataSourceProvider));
+  return PaintersRepositoryImpl(ref.read(_paintersRemoteDataSourceProvider));
 });
 
 final watchPaintersUseCaseProvider = Provider<WatchPainters>((ref) {

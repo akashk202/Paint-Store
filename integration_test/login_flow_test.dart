@@ -4,8 +4,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:c_h_p/main.dart' as app;
-import 'package:c_h_p/auth/login_page.dart';
-import 'package:c_h_p/pages/core/home_page.dart';
+import 'package:c_h_p/features/auth/presentation/pages/login_page.dart';
+import 'package:c_h_p/features/home/presentation/pages/home_page.dart';
 import 'package:c_h_p/test_helpers.dart';
 
 const String kLoginEmail =

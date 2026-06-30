@@ -28,7 +28,7 @@ import 'product_display_notifier.dart';
 import 'color_catalogue_state.dart';
 import 'color_catalogue_notifier.dart';
 
-final exploreRemoteDataSourceProvider = Provider<ExploreRemoteDataSource>((ref) {
+final _exploreRemoteDataSourceProvider = Provider<ExploreRemoteDataSource>((ref) {
   return ExploreRemoteDataSourceImpl();
 });
 
@@ -75,7 +75,7 @@ final removeShadeLinkUseCaseProvider = Provider<RemoveShadeLink>((ref) {
 });
 
 final exploreRepositoryProvider = Provider<ExploreRepository>((ref) {
-  final remoteDataSource = ref.read(exploreRemoteDataSourceProvider);
+  final remoteDataSource = ref.read(_exploreRemoteDataSourceProvider);
   return ExploreRepositoryImpl(remoteDataSource);
 });
 

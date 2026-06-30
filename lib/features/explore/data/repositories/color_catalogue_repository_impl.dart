@@ -1,4 +1,3 @@
-import 'package:firebase_database/firebase_database.dart';
 import '../../domain/entities/color_shade.dart';
 import '../../domain/repositories/color_catalogue_repository.dart';
 import '../datasources/color_catalogue_remote_datasource.dart';
@@ -31,7 +30,7 @@ class ColorCatalogueRepositoryImpl implements ColorCatalogueRepository {
       if (value == null || value is! Map) {
         return const <String, dynamic>{};
       }
-      return Map<String, dynamic>.from(value as Map);
+      return Map<String, dynamic>.from(value);
     });
   }
 
@@ -42,7 +41,7 @@ class ColorCatalogueRepositoryImpl implements ColorCatalogueRepository {
       if (value == null || value is! Map) {
         return const <String, dynamic>{};
       }
-      return Map<String, dynamic>.from(value as Map);
+      return Map<String, dynamic>.from(value);
     });
   }
 

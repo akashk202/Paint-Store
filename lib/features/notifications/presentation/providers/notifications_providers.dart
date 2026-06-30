@@ -9,12 +9,12 @@ import '../../../user/presentation/providers/user_providers.dart';
 import 'notifications_state.dart';
 import 'notifications_notifier.dart';
 
-final notificationsRemoteDataSourceProvider = Provider<NotificationsRemoteDataSource>((ref) {
+final _notificationsRemoteDataSourceProvider = Provider<NotificationsRemoteDataSource>((ref) {
   return NotificationsRemoteDataSourceImpl(FirebaseDatabase.instance.ref());
 });
 
 final notificationsRepositoryProvider = Provider<NotificationsRepository>((ref) {
-  return NotificationsRepositoryImpl(ref.read(notificationsRemoteDataSourceProvider));
+  return NotificationsRepositoryImpl(ref.read(_notificationsRemoteDataSourceProvider));
 });
 
 final watchDismissedNotificationsProvider = Provider<WatchDismissedNotifications>((ref) {

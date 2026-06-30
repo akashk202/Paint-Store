@@ -9,7 +9,7 @@ import '../../domain/usecases/handle_payment_success.dart';
 import 'payment_state.dart';
 import 'payment_notifier.dart';
 
-final paymentRemoteDataSourceProvider = Provider<PaymentRemoteDataSource>((ref) {
+final _paymentRemoteDataSourceProvider = Provider<PaymentRemoteDataSource>((ref) {
   return PaymentRemoteDataSourceImpl(
     db: FirebaseDatabase.instance,
     auth: FirebaseAuth.instance,
@@ -17,7 +17,7 @@ final paymentRemoteDataSourceProvider = Provider<PaymentRemoteDataSource>((ref) 
 });
 
 final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
-  final dataSource = ref.read(paymentRemoteDataSourceProvider);
+  final dataSource = ref.read(_paymentRemoteDataSourceProvider);
   return PaymentRepositoryImpl(dataSource);
 });
 

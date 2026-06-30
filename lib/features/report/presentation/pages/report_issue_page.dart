@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart'; // ⭐ UI: Added for animations
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -183,16 +184,20 @@ class _ViewReportsPageState extends ConsumerState<ViewReportsPage> {
 
           return ListView.builder(
             padding: const EdgeInsets.all(8.0),
-            cacheExtent: 800,
+            scrollCacheExtent: const ScrollCacheExtent.pixels(800),
             itemCount: reportsList.length,
             itemBuilder: (context, index) {
               final reportData = reportsList[index];
               final reportKey = reportData.key;
-              final timestamp = DateTime.fromMillisecondsSinceEpoch(reportData.timestamp);
-              final formattedDate = DateFormat('MMM d, yyyy - h:mm a').format(timestamp);
+              final timestamp =
+                  DateTime.fromMillisecondsSinceEpoch(reportData.timestamp);
+              final formattedDate =
+                  DateFormat('MMM d, yyyy - h:mm a').format(timestamp);
               final status = reportData.status;
               final userId = reportData.userId;
-              final issueText = reportData.issue.isNotEmpty ? reportData.issue : 'No issue description.';
+              final issueText = reportData.issue.isNotEmpty
+                  ? reportData.issue
+                  : 'No issue description.';
 
               return RepaintBoundary(
                       child: Card(

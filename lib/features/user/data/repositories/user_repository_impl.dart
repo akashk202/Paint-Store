@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:firebase_database/firebase_database.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../datasources/user_remote_datasource.dart';
@@ -75,7 +74,7 @@ class UserRepositoryImpl implements UserRepository {
       if (value == null || value is! Map) {
         return const <String, dynamic>{};
       }
-      return Map<String, dynamic>.from(value as Map);
+      return Map<String, dynamic>.from(value);
     });
   }
 

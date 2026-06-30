@@ -10,9 +10,9 @@ import 'package:iconsax/iconsax.dart';
 // Import your main app file and the pages you want to test
 // These paths are correct based on your project structure.
 import 'package:c_h_p/main.dart' as app;
-import 'package:c_h_p/auth/login_page.dart';
-import 'package:c_h_p/pages/core/home_page.dart';
-import 'package:c_h_p/auth/register_page.dart';
+import 'package:c_h_p/features/auth/presentation/pages/login_page.dart';
+import 'package:c_h_p/features/home/presentation/pages/home_page.dart';
+import 'package:c_h_p/features/auth/presentation/pages/register_page.dart';
 import 'package:c_h_p/test_helpers.dart';
 
 // Read test credentials from environment; default to requested values for convenience

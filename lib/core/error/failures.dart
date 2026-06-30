@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 /// Base failure class. All specific failures extend this.
-/// Failures are returned via Either<Failure, T> from repositories.
+/// Failures are returned via `Either<Failure, T>` from repositories.
 abstract class Failure extends Equatable {
   final String message;
   const Failure(this.message);

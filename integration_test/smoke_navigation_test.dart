@@ -6,12 +6,12 @@ import 'package:iconsax/iconsax.dart';
 
 import 'package:c_h_p/main.dart' as app;
 import 'package:c_h_p/test_helpers.dart';
-import 'package:c_h_p/auth/login_page.dart';
-import 'package:c_h_p/pages/core/home_page.dart';
-import 'package:c_h_p/pages/core/cart_page.dart';
-import 'package:c_h_p/pages/core/notifications_page.dart';
-import 'package:c_h_p/pages/core/report_issue_page.dart';
-import 'package:c_h_p/product/explore_product.dart';
+import 'package:c_h_p/features/auth/presentation/pages/login_page.dart';
+import 'package:c_h_p/features/home/presentation/pages/home_page.dart';
+import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
+import 'package:c_h_p/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:c_h_p/features/report/presentation/pages/report_issue_page.dart';
+import 'package:c_h_p/features/explore/presentation/pages/explore_page.dart';
 
 // Read optional creds for auth-requiring pages
 const String kTestEmail = String.fromEnvironment('TEST_EMAIL', defaultValue: '');

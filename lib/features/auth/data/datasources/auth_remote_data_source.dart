@@ -7,6 +7,7 @@ import 'package:c_h_p/core/error/exceptions.dart';
 import 'package:c_h_p/core/utils/constants.dart';
 import 'package:c_h_p/features/auth/data/models/user_model.dart';
 import 'package:c_h_p/firebase_options.dart';
+import 'package:c_h_p/features/notifications/data/datasources/fcm_remote_datasource.dart';
 
 
 /// Contract for the auth remote data source.
@@ -239,7 +240,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() async {
     try {
-      await FCMService.unsubscribeForUser(_auth.currentUser);
+      await FCMRemoteDataSource.unsubscribeForUser(_auth.currentUser);
       await _auth.signOut();
     } catch (e) {
       throw AuthException('Logout failed: ${e.toString()}');

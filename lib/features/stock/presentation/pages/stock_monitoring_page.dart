@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/rendering.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:c_h_p/features/product/data/models/product_model.dart';import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/stock_providers.dart';
 
 class StockMonitoringPage extends ConsumerStatefulWidget {
@@ -153,7 +155,7 @@ class _StockMonitoringPageState extends ConsumerState<StockMonitoringPage> {
 
         return ListView(
           padding: const EdgeInsets.all(16),
-          cacheExtent: 800,
+          scrollCacheExtent: const ScrollCacheExtent.pixels(800),
           children: categorizedStock.entries.map((categoryEntry) {
             return _buildCategoryExpansionTile(
               categoryName: categoryEntry.key,

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -24,7 +25,9 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Start VM and mark all as read
         ref.read(notificationsNotifierProvider.notifier).start(currentUser.uid);
-        ref.read(notificationsNotifierProvider.notifier).markAllRead(currentUser.uid);
+        ref
+            .read(notificationsNotifierProvider.notifier)
+            .markAllRead(currentUser.uid);
         if (mounted) setState(() => _animatedOnce = true);
       });
     }
@@ -109,7 +112,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(8.0),
-      cacheExtent: 800,
+      scrollCacheExtent: const ScrollCacheExtent.pixels(800),
       itemCount: entries.length,
       itemBuilder: (context, index) {
         final it = entries[index];

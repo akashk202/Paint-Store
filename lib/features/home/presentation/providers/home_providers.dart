@@ -9,12 +9,12 @@ import '../../domain/usecases/observe_unread_notifications.dart';
 import 'home_state.dart';
 import 'home_notifier.dart';
 
-final homeRemoteDataSourceProvider = Provider<HomeRemoteDataSource>((ref) {
+final _homeRemoteDataSourceProvider = Provider<HomeRemoteDataSource>((ref) {
   return HomeRemoteDataSourceImpl(database: FirebaseDatabase.instance);
 });
 
 final homeRepositoryProvider = Provider<HomeRepository>((ref) {
-  final remoteDataSource = ref.read(homeRemoteDataSourceProvider);
+  final remoteDataSource = ref.read(_homeRemoteDataSourceProvider);
   return HomeRepositoryImpl(remoteDataSource);
 });
 

@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -434,7 +435,7 @@ class _CartPageState extends ConsumerState<CartPage> {
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            cacheExtent: 600,
+            scrollCacheExtent: const ScrollCacheExtent.pixels(600),
             itemCount: items.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {

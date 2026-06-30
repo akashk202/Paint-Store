@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/entities/color_shade.dart';
 import '../../domain/usecases/fetch_all_shades.dart';
 import 'color_catalogue_state.dart';
 

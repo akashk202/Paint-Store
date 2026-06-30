@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:c_h_p/widgets/home_sections.dart'; // Import the file to test
+import 'package:c_h_p/features/home/presentation/widgets/home_sections.dart'; // Import the file to test
 
 // A helper function to wrap our widget in a MaterialApp
 // This is needed to give it context (like text direction, themes, etc.)

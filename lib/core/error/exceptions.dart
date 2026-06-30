@@ -1,5 +1,5 @@
-/// Custom exceptions for the data layer.
-/// These are thrown by data sources and caught by repository implementations.
+// Custom exceptions for the data layer.
+// These are thrown by data sources and caught by repository implementations.
 
 /// Thrown when a server/remote operation fails.
 class ServerException implements Exception {

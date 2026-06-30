@@ -8,7 +8,7 @@ import '../../domain/repositories/report_repository.dart';
 import '../../domain/usecases/report_usecases.dart';
 import 'report_notifier.dart';
 
-final reportRemoteDataSourceProvider = Provider<ReportRemoteDataSource>((ref) {
+final _reportRemoteDataSourceProvider = Provider<ReportRemoteDataSource>((ref) {
   return ReportRemoteDataSourceImpl(
     dbRef: FirebaseDatabase.instance.ref(),
     auth: FirebaseAuth.instance,
@@ -16,7 +16,7 @@ final reportRemoteDataSourceProvider = Provider<ReportRemoteDataSource>((ref) {
 });
 
 final reportRepositoryProvider = Provider<ReportRepository>((ref) {
-  return ReportRepositoryImpl(ref.read(reportRemoteDataSourceProvider));
+  return ReportRepositoryImpl(ref.read(_reportRemoteDataSourceProvider));
 });
 
 final submitReportUseCaseProvider = Provider<SubmitReport>((ref) {
