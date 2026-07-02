@@ -1,4 +1,4 @@
-import '../../data/models/product_model.dart';
+import '../entities/product_entity.dart';
 
 abstract class ProductRepository {
   Future<List<Product>> fetchAll();
@@ -7,3 +7,6 @@ abstract class ProductRepository {
   Future<void> addProduct(Map<String, dynamic> data);
   Stream<List<Product>> productsStream();
 }
+
+
+// Either<Failure, T>

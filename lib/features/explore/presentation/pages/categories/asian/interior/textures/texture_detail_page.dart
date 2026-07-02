@@ -343,7 +343,7 @@ class _TextureDetailPageState extends State<TextureDetailPage> {
                       // Attempt to create a Product object for navigation
                       Product? productForNav;
                       try {
-                        productForNav = Product.fromMap(productInfo['key'], productInfo);
+                        productForNav = ProductModel.fromMap(productInfo['key'], productInfo);
                       } catch (e) {
                         debugPrint("Could not parse product for nav: ${productInfo['name']} - $e");
                       }

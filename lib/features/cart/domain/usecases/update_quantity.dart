@@ -12,3 +12,5 @@ class UpdateQuantity {
     );
   }
 }
+
+// implements UseCase

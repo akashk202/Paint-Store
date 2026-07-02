@@ -10,3 +10,6 @@ class UploadImageFile {
     return repository.uploadImage(file, folder: folder);
   }
 }
+
+
+// implements UseCase

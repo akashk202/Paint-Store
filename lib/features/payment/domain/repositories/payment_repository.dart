@@ -27,3 +27,6 @@ abstract class PaymentRepository {
 
   Future<void> clearCart();
 }
+
+
+// Either<Failure, T>

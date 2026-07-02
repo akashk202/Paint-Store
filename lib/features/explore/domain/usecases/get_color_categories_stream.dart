@@ -9,3 +9,6 @@ class GetColorCategoriesStream {
     return repository.colorCategoriesStream();
   }
 }
+
+
+// implements UseCase

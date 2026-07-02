@@ -10,3 +10,5 @@ class FetchUserProfile {
     return repository.fetchUserProfile();
   }
 }
+
+// implements UseCase

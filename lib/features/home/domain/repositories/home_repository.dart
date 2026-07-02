@@ -5,3 +5,6 @@ abstract class HomeRepository {
 
   Stream<int> unreadCountStream(String uid);
 }
+
+
+// Either<Failure, T>

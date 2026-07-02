@@ -269,7 +269,9 @@ class _ProductDisplayPageState extends ConsumerState<ProductDisplayPage>
       return _buildLuxuryCard(context, product, priceToShow, smallestSizeLabel,
               index: index)
           .animate()
-          .fadeIn(duration: 600.ms, delay: ((index ?? 0) * 120).ms)
+          .fadeIn(
+              duration: 600.ms,
+              delay: (index != null && index < 6 ? index * 120 : 0).ms)
           .moveX(begin: -24, duration: 600.ms, curve: Curves.easeOutCubic);
     }
 
@@ -279,7 +281,9 @@ class _ProductDisplayPageState extends ConsumerState<ProductDisplayPage>
     if (isAsian) {
       return defaultCard
           .animate()
-          .fadeIn(duration: 600.ms, delay: ((index ?? 0) * 120).ms)
+          .fadeIn(
+              duration: 600.ms,
+              delay: (index != null && index < 6 ? index * 120 : 0).ms)
           .moveX(begin: -24, duration: 600.ms, curve: Curves.easeOutCubic);
     }
     return defaultCard;
@@ -329,6 +333,7 @@ class _ProductDisplayPageState extends ConsumerState<ProductDisplayPage>
                   fit: BoxFit.cover,
                   width: 130,
                   height: double.infinity,
+                  memCacheWidth: 260,
                   placeholder: (context, url) =>
                       Container(color: Colors.grey.shade100),
                   errorWidget: (c, e, s) => Container(

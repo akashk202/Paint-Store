@@ -9,3 +9,6 @@ class FetchPendingManagerRequests {
     return repository.fetchPendingManagerRequests();
   }
 }
+
+
+// implements UseCase

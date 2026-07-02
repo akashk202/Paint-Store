@@ -9,3 +9,6 @@ class DeleteProduct {
     return repository.deleteProduct(key);
   }
 }
+
+
+// implements UseCase

@@ -10,3 +10,6 @@ class GetAllHomeProducts {
     return repository.fetchAllProducts();
   }
 }
+
+
+// implements UseCase

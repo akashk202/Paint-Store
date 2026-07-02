@@ -1,31 +1,45 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:c_h_p/core/usecases/usecase.dart';
 import 'package:c_h_p/features/auth/domain/usecases/login_usecase.dart';
 import 'package:c_h_p/features/auth/domain/usecases/register_usecase.dart';
 import 'package:c_h_p/features/auth/domain/usecases/reset_password_usecase.dart';
-import 'auth_providers.dart';
+import 'package:c_h_p/features/auth/domain/usecases/google_sign_in_usecase.dart';
+import 'package:c_h_p/features/auth/domain/usecases/logout_usecase.dart';
+import 'auth_state.dart';
 
-class AuthNotifier extends AsyncNotifier<void> {
-  @override
-  FutureOr<void> build() {
-    // Initial state is just 'not doing anything'
-  }
+class AuthNotifier extends StateNotifier<AuthState> {
+  final LoginUseCase _loginUseCase;
+  final RegisterUseCase _registerUseCase;
+  final GoogleSignInUseCase _googleSignInUseCase;
+  final ResetPasswordUseCase _resetPasswordUseCase;
+  final LogoutUseCase _logoutUseCase;
+
+  AuthNotifier({
+    required LoginUseCase loginUseCase,
+    required RegisterUseCase registerUseCase,
+    required GoogleSignInUseCase googleSignInUseCase,
+    required ResetPasswordUseCase resetPasswordUseCase,
+    required LogoutUseCase logoutUseCase,
+  })  : _loginUseCase = loginUseCase,
+        _registerUseCase = registerUseCase,
+        _googleSignInUseCase = googleSignInUseCase,
+        _resetPasswordUseCase = resetPasswordUseCase,
+        _logoutUseCase = logoutUseCase,
+        super(const AuthState());
 
   Future<bool> login(String email, String password) async {
-    state = const AsyncValue.loading();
-    final loginUseCase = ref.read(loginUseCaseProvider);
-    final result = await loginUseCase(
+    state = state.copyWith(isLoading: true);
+    final result = await _loginUseCase(
       LoginParams(email: email, password: password),
     );
 
     return result.fold(
       (failure) {
-        state = AsyncValue.error(failure.message, StackTrace.current);
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
         return false;
       },
       (_) {
-        state = const AsyncValue.data(null);
+        state = state.copyWith(isLoading: false, isSuccess: true);
         return true;
       },
     );
@@ -38,9 +52,8 @@ class AuthNotifier extends AsyncNotifier<void> {
     required String password,
     required String address,
   }) async {
-    state = const AsyncValue.loading();
-    final registerUseCase = ref.read(registerUseCaseProvider);
-    final result = await registerUseCase(
+    state = state.copyWith(isLoading: true);
+    final result = await _registerUseCase(
       RegisterParams(
         name: name,
         email: email,
@@ -52,69 +65,65 @@ class AuthNotifier extends AsyncNotifier<void> {
 
     return result.fold(
       (failure) {
-        state = AsyncValue.error(failure.message, StackTrace.current);
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
         return false;
       },
       (_) {
-        state = const AsyncValue.data(null);
+        state = state.copyWith(isLoading: false, isSuccess: true);
         return true;
       },
     );
   }
 
   Future<bool> signInWithGoogle() async {
-    state = const AsyncValue.loading();
-    final googleSignInUseCase = ref.read(googleSignInUseCaseProvider);
-    final result = await googleSignInUseCase(const NoParams());
+    state = state.copyWith(isLoading: true);
+    final result = await _googleSignInUseCase(const NoParams());
 
     return result.fold(
       (failure) {
-        // If Google sign-in was cancelled, we can handle it silently or set error
         if (failure.message == 'Google sign-in was cancelled') {
-          state = const AsyncValue.data(null);
+          state = state.copyWith(isLoading: false);
           return false;
         }
-        state = AsyncValue.error(failure.message, StackTrace.current);
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
         return false;
       },
       (_) {
-        state = const AsyncValue.data(null);
+        state = state.copyWith(isLoading: false, isSuccess: true);
         return true;
       },
     );
   }
 
   Future<bool> resetPassword(String email) async {
-    state = const AsyncValue.loading();
-    final resetPasswordUseCase = ref.read(resetPasswordUseCaseProvider);
-    final result = await resetPasswordUseCase(
+    state = state.copyWith(isLoading: true);
+    final result = await _resetPasswordUseCase(
       ResetPasswordParams(email: email),
     );
 
     return result.fold(
       (failure) {
-        state = AsyncValue.error(failure.message, StackTrace.current);
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
         return false;
       },
       (_) {
-        state = const AsyncValue.data(null);
+        state = state.copyWith(isLoading: false, isSuccess: true);
         return true;
       },
     );
   }
 
   Future<bool> logout() async {
-    state = const AsyncValue.loading();
-    final logoutUseCase = ref.read(logoutUseCaseProvider);
-    final result = await logoutUseCase(const NoParams());
+    state = state.copyWith(isLoading: true);
+    final result = await _logoutUseCase(const NoParams());
 
     return result.fold(
       (failure) {
-        state = AsyncValue.error(failure.message, StackTrace.current);
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
         return false;
       },
       (_) {
-        state = const AsyncValue.data(null);
+        state = state.copyWith(isLoading: false, isSuccess: true);
         return true;
       },
     );

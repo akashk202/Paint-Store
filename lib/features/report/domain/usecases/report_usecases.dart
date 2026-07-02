@@ -38,3 +38,6 @@ class ResolveReport {
     );
   }
 }
+
+
+// implements UseCase

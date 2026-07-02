@@ -7,3 +7,6 @@ abstract class VisualizerRepository {
     required String scene,
   });
 }
+
+
+// Either<Failure, T>

@@ -1,4 +1,4 @@
-import 'package:c_h_p/features/painters/data/models/painter_model.dart';
+import '../entities/painter_entity.dart';
 import '../repositories/painters_repository.dart';
 
 class WatchPainters {
@@ -10,3 +10,6 @@ class WatchPainters {
     return repository.watchPainters();
   }
 }
+
+
+// implements UseCase

@@ -9,3 +9,5 @@ class ClearCart {
     return repository.clearCart();
   }
 }
+
+// implements UseCase

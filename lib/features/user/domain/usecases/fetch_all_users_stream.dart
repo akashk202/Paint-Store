@@ -9,3 +9,6 @@ class FetchAllUsersStream {
     return repository.fetchAllUsersStream();
   }
 }
+
+
+// implements UseCase

@@ -8,3 +8,6 @@ class UpdateUserPassword {
     return repository.updateUserPassword(currentPassword, newPassword);
   }
 }
+
+
+// implements UseCase

@@ -8,3 +8,6 @@ class GetUserRole {
     return repository.fetchUserRole(uid);
   }
 }
+
+
+// implements UseCase

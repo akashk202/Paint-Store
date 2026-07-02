@@ -1,4 +1,4 @@
-import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:c_h_p/features/product/domain/entities/product_entity.dart';
 import '../repositories/color_catalogue_repository.dart';
 
 class ResolveLinkedProduct {
@@ -10,3 +10,6 @@ class ResolveLinkedProduct {
     return repository.resolveLinkedProduct(shadeCode);
   }
 }
+
+
+// implements UseCase

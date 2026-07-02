@@ -80,7 +80,7 @@ class ColorCatalogueRemoteDataSourceImpl
       final prodSnap = await _dbRef.child('products/$productId').get();
       if (!prodSnap.exists || prodSnap.value is! Map) return null;
 
-      return Product.fromMap(
+      return ProductModel.fromMap(
           productId, Map<String, dynamic>.from(prodSnap.value as Map));
     } catch (_) {
       return null;
@@ -100,7 +100,7 @@ class ColorCatalogueRemoteDataSourceImpl
     final List<Product> products = [];
     productsMap.forEach((key, value) {
       try {
-        products.add(Product.fromMap(key, Map<String, dynamic>.from(value)));
+        products.add(ProductModel.fromMap(key, Map<String, dynamic>.from(value)));
       } catch (_) {}
     });
     return products;

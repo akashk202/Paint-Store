@@ -16,3 +16,9 @@ class NoParams extends Equatable {
   @override
   List<Object?> get props => [];
 }
+
+/// Base stream use case contract.
+abstract class StreamUseCase<T, Params> {
+  Stream<T> call(Params params);
+}
+

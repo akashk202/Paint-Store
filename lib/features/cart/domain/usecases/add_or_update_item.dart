@@ -21,3 +21,5 @@ class AddOrUpdateItem {
     );
   }
 }
+
+// implements UseCase

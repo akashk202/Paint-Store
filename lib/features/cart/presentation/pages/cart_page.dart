@@ -285,7 +285,7 @@ class _CartPageState extends ConsumerState<CartPage> {
     rawDetails.forEach((key, value) {
       if (value != null) {
         try {
-          detailsMap[key] = Product.fromMap(key, value);
+          detailsMap[key] = ProductModel.fromMap(key, value);
         } catch (e) {
           debugPrint("Error parsing product details for $key: $e");
           detailsMap[key] = null;
@@ -444,7 +444,7 @@ class _CartPageState extends ConsumerState<CartPage> {
               if (!animateItems) return card;
               return card
                   .animate()
-                  .fadeIn(duration: 400.ms, delay: (100 * index).ms)
+                  .fadeIn(duration: 400.ms, delay: (index < 6 ? 100 * index : 0).ms)
                   .moveY(begin: 20, curve: Curves.easeOutCubic);
             },
           ),

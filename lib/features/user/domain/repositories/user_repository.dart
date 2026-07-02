@@ -23,3 +23,6 @@ abstract class UserRepository {
   Future<void> deleteUser(String uid);
 }
 
+
+
+// Either<Failure, T>

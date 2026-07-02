@@ -9,3 +9,6 @@ abstract class NotificationsRepository {
   Future<void> dismissGlobal(String uid, String signature);
   Future<void> deletePersonal(String uid, String key);
 }
+
+
+// Either<Failure, T>

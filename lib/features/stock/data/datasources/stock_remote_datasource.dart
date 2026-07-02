@@ -19,7 +19,7 @@ class StockRemoteDataSourceImpl implements StockRemoteDataSource {
       final List<Product> products = [];
       map.forEach((key, value) {
         try {
-          products.add(Product.fromMap(key, Map<String, dynamic>.from(value)));
+          products.add(ProductModel.fromMap(key, Map<String, dynamic>.from(value)));
         } catch (_) {}
       });
       return products;

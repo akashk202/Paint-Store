@@ -137,7 +137,7 @@ import 'package:c_h_p/features/product/data/models/product_model.dart';class Rec
   static Future<Product?> _fetchProduct(String key) async {
     final snap = await FirebaseDatabase.instance.ref('products/$key').get();
     if (snap.exists && snap.value != null) {
-      return Product.fromMap(key, Map<String, dynamic>.from(snap.value as Map));
+      return ProductModel.fromMap(key, Map<String, dynamic>.from(snap.value as Map));
     }
     return null;
   }
@@ -149,7 +149,7 @@ import 'package:c_h_p/features/product/data/models/product_model.dart';class Rec
     final List<Product> list = [];
     map.forEach((k, v) {
       try {
-        final p = Product.fromMap(k, Map<String, dynamic>.from(v));
+        final p = ProductModel.fromMap(k, Map<String, dynamic>.from(v));
         if (p.stock > 0) list.add(p);
       } catch (_) {}
     });

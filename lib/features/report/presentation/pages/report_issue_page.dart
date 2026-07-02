@@ -233,7 +233,7 @@ class _ViewReportsPageState extends ConsumerState<ViewReportsPage> {
                 ),
               ))
                   .animate()
-                  .fade(duration: 500.ms, delay: (100 * index).ms)
+                  .fade(duration: 500.ms, delay: (index < 6 ? 100 * index : 0).ms)
                   .slideY(begin: 0.2, curve: Curves.easeOut);
             },
           );

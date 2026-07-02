@@ -1,4 +1,4 @@
-import '../../../product/data/models/product_model.dart';
+import 'package:c_h_p/features/product/domain/entities/product_entity.dart';
 import '../entities/explore_product_entity.dart';
 
 abstract class ExploreRepository {
@@ -11,3 +11,6 @@ abstract class ExploreRepository {
   });
   Future<List<ExploreProductEntity>> fetchSimilarProducts(Product anchor, {int limit = 10});
 }
+
+
+// Either<Failure, T>

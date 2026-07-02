@@ -117,7 +117,8 @@ class _SuperLuxuryPageState extends ConsumerState<SuperLuxuryPage> {
                         return _buildProductCard(context, product)
                             .animate()
                             .fadeIn(
-                                duration: 600.ms, delay: (150 * index).ms)
+                                duration: 600.ms,
+                                delay: (index < 6 ? 150 * index : 0).ms)
                             .moveX(
                                 begin: -30,
                                 duration: 600.ms,
@@ -158,6 +159,7 @@ class _SuperLuxuryPageState extends ConsumerState<SuperLuxuryPage> {
                 fit: BoxFit.cover,
                 width: 130,
                 height: double.infinity,
+                memCacheWidth: 260,
                 placeholder: (context, url) =>
                     Container(color: Colors.grey.shade100),
                 errorWidget: (c, e, s) => Container(

@@ -12,6 +12,8 @@ import '../../domain/usecases/fetch_all_products.dart';
 import '../../domain/usecases/get_products_stream.dart';
 import '../../domain/usecases/upload_raw_file.dart';
 import '../../domain/usecases/upload_image_file.dart';
+import 'product_notifier.dart';
+import 'product_state.dart';
 
 final _productRemoteDataSourceProvider = Provider<ProductRemoteDataSource>((ref) {
   return ProductRemoteDataSource();
@@ -57,4 +59,12 @@ final uploadImageFileUseCaseProvider = Provider<UploadImageFile>((ref) {
 final productsStreamProvider = StreamProvider<List<Product>>((ref) {
   final getProductsStream = ref.watch(getProductsStreamUseCaseProvider);
   return getProductsStream();
+});
+
+final productNotifierProvider = StateNotifierProvider<ProductNotifier, ProductState>((ref) {
+  return ProductNotifier(
+    addProduct: ref.read(addProductUseCaseProvider),
+    deleteProduct: ref.read(deleteProductUseCaseProvider),
+    updateProduct: ref.read(updateProductUseCaseProvider),
+  );
 });

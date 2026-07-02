@@ -9,3 +9,6 @@ class ObserveUnreadNotifications {
     return repository.unreadCountStream(uid);
   }
 }
+
+
+// implements UseCase

@@ -26,7 +26,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     final List<HomeProductModel> products = <HomeProductModel>[];
     map.forEach((key, value) {
       try {
-        final product = Product.fromMap(key, Map<String, dynamic>.from(value));
+        final product = ProductModel.fromMap(key, Map<String, dynamic>.from(value));
         products.add(HomeProductModel.fromProduct(product));
       } catch (_) {
         // Skip malformed products and keep rendering the rest.

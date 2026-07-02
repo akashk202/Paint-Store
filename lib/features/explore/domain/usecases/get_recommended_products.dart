@@ -11,3 +11,6 @@ class GetRecommendedProducts {
     return repository.fetchRecommended(limit: limit);
   }
 }
+
+
+// implements UseCase

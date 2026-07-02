@@ -29,3 +29,5 @@ abstract class CartRepository {
     List<String> productKeys,
   );
 }
+
+// Either<Failure, T>

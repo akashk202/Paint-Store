@@ -388,6 +388,8 @@ class _ProductListForShadePageState
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
+                  memCacheWidth: 160,
+                  memCacheHeight: 160,
                   errorWidget: (c, e, s) => Container(
                       width: 80,
                       height: 80,

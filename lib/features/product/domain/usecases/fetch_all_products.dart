@@ -1,4 +1,4 @@
-import '../../data/models/product_model.dart';
+import '../entities/product_entity.dart';
 import '../repositories/product_repository.dart';
 
 class FetchAllProducts {
@@ -10,3 +10,6 @@ class FetchAllProducts {
     return repository.fetchAll();
   }
 }
+
+
+// implements UseCase

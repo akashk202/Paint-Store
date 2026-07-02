@@ -11,6 +11,7 @@ import '../../domain/usecases/google_sign_in_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import 'auth_notifier.dart';
+import 'auth_state.dart';
 
 // Provides the Firebase instances
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) => FirebaseAuth.instance);
@@ -57,7 +58,13 @@ final logoutUseCaseProvider = Provider<LogoutUseCase>((ref) {
 });
 
 // Notifier
-final authNotifierProvider = AsyncNotifierProvider<AuthNotifier, void>(() {
-  return AuthNotifier();
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  return AuthNotifier(
+    loginUseCase: ref.read(loginUseCaseProvider),
+    registerUseCase: ref.read(registerUseCaseProvider),
+    googleSignInUseCase: ref.read(googleSignInUseCaseProvider),
+    resetPasswordUseCase: ref.read(resetPasswordUseCaseProvider),
+    logoutUseCase: ref.read(logoutUseCaseProvider),
+  );
 });
 

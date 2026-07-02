@@ -18,3 +18,6 @@ class VisualizeImage {
     );
   }
 }
+
+
+// implements UseCase

@@ -9,3 +9,6 @@ class UpdateProduct {
     return repository.updateProduct(key, data);
   }
 }
+
+
+// implements UseCase

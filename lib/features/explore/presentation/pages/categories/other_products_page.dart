@@ -85,6 +85,8 @@ class _OtherProductsPageState extends ConsumerState<OtherProductsPage> {
                   width: 70,
                   height: 70,
                   fit: BoxFit.cover,
+                  memCacheWidth: 140,
+                  memCacheHeight: 140,
                   placeholder: (context, url) =>
                       Container(color: Colors.grey.shade200),
                   errorWidget: (context, url, error) =>

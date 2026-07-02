@@ -23,3 +23,5 @@ class UpdateUserProfile {
     );
   }
 }
+
+// implements UseCase

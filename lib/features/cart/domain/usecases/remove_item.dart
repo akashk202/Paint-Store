@@ -9,3 +9,5 @@ class RemoveItem {
     return repository.removeItem(productKey);
   }
 }
+
+// implements UseCase

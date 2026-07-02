@@ -14,3 +14,5 @@ abstract class CheckoutRepository {
 
   Future<List<String>> fetchCartItemNames();
 }
+
+// Either<Failure, T>

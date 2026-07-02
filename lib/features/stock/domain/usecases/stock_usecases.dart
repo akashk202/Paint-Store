@@ -1,4 +1,5 @@
-import 'package:c_h_p/features/product/data/models/product_model.dart';import '../repositories/stock_repository.dart';
+import 'package:c_h_p/features/product/domain/entities/product_entity.dart';
+import '../repositories/stock_repository.dart';
 
 class WatchStock {
   final StockRepository repository;
@@ -19,3 +20,6 @@ class UpdateStock {
     return repository.updateStock(productKey, newStock);
   }
 }
+
+
+// implements UseCase

@@ -17,3 +17,5 @@ class ChangeSize {
     );
   }
 }
+
+// implements UseCase

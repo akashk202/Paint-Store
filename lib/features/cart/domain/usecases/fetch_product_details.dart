@@ -9,3 +9,6 @@ class FetchProductDetails {
     return repository.fetchProductDetails(productKeys);
   }
 }
+
+
+// implements UseCase

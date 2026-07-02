@@ -260,7 +260,7 @@ class _PaintersManagementPageState extends State<PaintersManagementPage> {
 
           final List<Painter> paintersList = [];
           paintersMap.forEach((key, value) {
-            paintersList.add(Painter.fromMap(key, value));
+            paintersList.add(PainterModel.fromMap(key, value));
           });
 
           return ListView.builder(

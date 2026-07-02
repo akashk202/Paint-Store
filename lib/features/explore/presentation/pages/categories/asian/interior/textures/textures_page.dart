@@ -133,7 +133,8 @@ class _TexturesPageState extends State<TexturesPage> {
         // Animate each card
         return _buildTextureCard(texture)
             .animate()
-            .fadeIn(delay: (index * 50).ms, duration: 300.ms);
+            .fadeIn(
+                delay: (index < 8 ? index * 50 : 0).ms, duration: 300.ms);
       },
     );
   }
@@ -173,6 +174,7 @@ class _TexturesPageState extends State<TexturesPage> {
                 child: CachedNetworkImage(
                   imageUrl: texture['imageUrl'] ?? '', // Main image URL
                   fit: BoxFit.cover,
+                  memCacheWidth: 250,
                   placeholder: (context, url) =>
                       Container(color: Colors.grey.shade200),
                   errorWidget: (context, url, error) => const Center(

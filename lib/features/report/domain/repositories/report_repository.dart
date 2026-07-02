@@ -9,3 +9,6 @@ abstract class ReportRepository {
     required String issueText,
   });
 }
+
+
+// Either<Failure, T>

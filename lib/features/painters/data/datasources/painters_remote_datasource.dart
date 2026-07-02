@@ -20,7 +20,7 @@ class PaintersRemoteDataSourceImpl implements PaintersRemoteDataSource {
       final list = <Painter>[];
       raw.forEach((key, value) {
         try {
-          list.add(Painter.fromMap(key, value));
+          list.add(PainterModel.fromMap(key, value));
         } catch (_) {}
       });
       return list;

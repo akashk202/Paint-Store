@@ -9,3 +9,6 @@ class DenyManagerRequest {
     return repository.denyManagerRequest(uid);
   }
 }
+
+
+// implements UseCase

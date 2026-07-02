@@ -10,3 +10,5 @@ class GetCartStream {
     return repository.cartStream();
   }
 }
+
+// implements UseCase

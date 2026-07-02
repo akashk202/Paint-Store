@@ -71,3 +71,6 @@ class DeletePersonalNotification {
     return repository.deletePersonal(uid, key);
   }
 }
+
+
+// implements UseCase

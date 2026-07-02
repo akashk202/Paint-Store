@@ -1,5 +1,5 @@
 import '../entities/color_shade.dart';
-import 'package:c_h_p/features/product/data/models/product_model.dart';
+import 'package:c_h_p/features/product/domain/entities/product_entity.dart';
 
 abstract class ColorCatalogueRepository {
   Future<List<ColorShade>> fetchAllShades();
@@ -11,3 +11,6 @@ abstract class ColorCatalogueRepository {
   Future<void> setShadeLink(String shadeCode, Map<String, dynamic> data);
   Future<void> removeShadeLink(String shadeCode);
 }
+
+
+// Either<Failure, T>

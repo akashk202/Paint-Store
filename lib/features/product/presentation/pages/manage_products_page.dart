@@ -2,7 +2,6 @@ import 'package:c_h_p/features/admin/presentation/pages/add_product_page.dart';
 import 'package:c_h_p/features/product/data/models/product_model.dart';
 import 'package:c_h_p/features/product/presentation/pages/edit_product_page.dart';
 import 'package:c_h_p/features/product/presentation/providers/product_providers.dart';
-import 'package:c_h_p/features/product/presentation/providers/product_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -132,7 +131,7 @@ class _ManageProductsPageState extends ConsumerState<ManageProductsPage> {
                   itemBuilder: (context, index) {
                     final product = filteredProducts[index];
                     return _buildProductCard(
-                        product, product.toMap()); // Pass both product and raw data
+                        product, (product as ProductModel).toMap()); // Pass both product and raw data
                   },
                 );
                   },

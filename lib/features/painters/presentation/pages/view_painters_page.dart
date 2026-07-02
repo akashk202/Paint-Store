@@ -44,7 +44,7 @@ class ViewPaintersPage extends StatelessWidget {
 
           final List<Painter> paintersList = [];
           paintersMap.forEach((key, value) {
-            paintersList.add(Painter.fromMap(key, value));
+            paintersList.add(PainterModel.fromMap(key, value));
           });
 
           return ListView.builder(
@@ -73,6 +73,8 @@ class ViewPaintersPage extends StatelessWidget {
                           fit: BoxFit.cover,
                           width: 60,
                           height: 60,
+                          memCacheWidth: 120,
+                          memCacheHeight: 120,
                           placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2.0),
                           errorWidget: (context, url, error) => const Icon(Iconsax.user, color: Colors.grey, size: 30),
                         ),
@@ -118,7 +120,7 @@ class ViewPaintersPage extends StatelessWidget {
                 ),
               ) // â­ UI: Added smooth fade-in and slide animation to each card.
                   .animate()
-                  .fade(duration: 500.ms, delay: (100 * index).ms)
+                  .fade(duration: 500.ms, delay: (index < 6 ? 100 * index : 0).ms)
                   .slideY(begin: 0.3, curve: Curves.easeOut);
             },
           );

@@ -10,3 +10,6 @@ class UploadRawFile {
     return repository.uploadRaw(file, folder: folder);
   }
 }
+
+
+// implements UseCase

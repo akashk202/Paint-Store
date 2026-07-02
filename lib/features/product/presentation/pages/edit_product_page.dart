@@ -106,7 +106,7 @@ class _EditProductPageState extends ConsumerState<EditProductPage> {
   void initState() {
     super.initState();
     // Initialize the Product object from the passed data
-    _product = Product.fromMap(widget.productKey, widget.productData);
+    _product = ProductModel.fromMap(widget.productKey, widget.productData);
 
     // Initialize all controllers with the existing product data
     _nameController = TextEditingController(text: _product.name);
@@ -214,15 +214,20 @@ class _EditProductPageState extends ConsumerState<EditProductPage> {
         },
       };
 
-      // Use update product use case
-      await ref.read(updateProductUseCaseProvider).call(
+      // Use update product notifier
+      final success = await ref.read(productNotifierProvider.notifier).updateProduct(
         widget.productKey,
         updatedProductData,
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product updated successfully')));
-        Navigator.pop(context);
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product updated successfully')));
+          Navigator.pop(context);
+        } else {
+          final error = ref.read(productNotifierProvider).errorMessage;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update product: ${error ?? "Unknown error"}')));
+        }
       }
     } catch (error) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update product: $error')));

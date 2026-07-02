@@ -9,3 +9,6 @@ class DeleteUser {
     return repository.deleteUser(uid);
   }
 }
+
+
+// implements UseCase

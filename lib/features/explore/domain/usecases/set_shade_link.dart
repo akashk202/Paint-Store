@@ -9,3 +9,6 @@ class SetShadeLink {
     return repository.setShadeLink(shadeCode, data);
   }
 }
+
+
+// implements UseCase

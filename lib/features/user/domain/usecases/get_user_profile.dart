@@ -7,3 +7,6 @@ class GetUserProfile {
 
   Future<UserProfileEntity> call() => repository.getUserProfile();
 }
+
+
+// implements UseCase

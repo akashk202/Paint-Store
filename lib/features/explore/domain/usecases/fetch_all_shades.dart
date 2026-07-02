@@ -10,3 +10,6 @@ class FetchAllShades {
     return repository.fetchAllShades();
   }
 }
+
+
+// implements UseCase

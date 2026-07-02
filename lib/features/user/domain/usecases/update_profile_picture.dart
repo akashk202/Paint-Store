@@ -14,3 +14,6 @@ class DeleteProfilePicture {
 
   Future<void> call() => repository.deleteProfilePicture();
 }
+
+
+// implements UseCase

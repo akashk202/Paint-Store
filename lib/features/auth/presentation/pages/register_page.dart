@@ -138,8 +138,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
         );
       }
     } else {
-      final error = ref.read(authNotifierProvider).error;
-      _showSnackBar(error?.toString() ?? "Registration failed", isError: true);
+      final error = ref.read(authNotifierProvider).errorMessage;
+      _showSnackBar(error ?? "Registration failed", isError: true);
     }
   }
 

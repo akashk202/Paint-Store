@@ -9,3 +9,6 @@ class AddProduct {
     return repository.addProduct(data);
   }
 }
+
+
+// implements UseCase

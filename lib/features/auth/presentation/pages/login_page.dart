@@ -67,8 +67,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         );
       }
     } else {
-      final error = ref.read(authNotifierProvider).error;
-      _showSnackBar(error?.toString() ?? "Login failed. Please try again.", Colors.redAccent);
+      final error = ref.read(authNotifierProvider).errorMessage;
+      _showSnackBar(error ?? "Login failed. Please try again.", Colors.redAccent);
     }
   }
 
@@ -92,9 +92,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         );
       }
     } else {
-      final error = ref.read(authNotifierProvider).error;
+      final error = ref.read(authNotifierProvider).errorMessage;
       if (error != null) {
-        _showSnackBar(error.toString(), Colors.redAccent);
+        _showSnackBar(error, Colors.redAccent);
       }
     }
   }
@@ -110,8 +110,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (success) {
       _showSnackBar("Password reset link sent to your email.", Colors.green);
     } else {
-      final error = ref.read(authNotifierProvider).error;
-      _showSnackBar(error?.toString() ?? "An error occurred.", Colors.redAccent);
+      final error = ref.read(authNotifierProvider).errorMessage;
+      _showSnackBar(error ?? "An error occurred.", Colors.redAccent);
     }
   }
 

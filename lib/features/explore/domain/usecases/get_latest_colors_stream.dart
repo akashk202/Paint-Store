@@ -9,3 +9,6 @@ class GetLatestColorsStream {
     return repository.latestColorsStream();
   }
 }
+
+
+// implements UseCase

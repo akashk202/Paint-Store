@@ -9,3 +9,6 @@ class RemoveShadeLink {
     return repository.removeShadeLink(shadeCode);
   }
 }
+
+
+// implements UseCase

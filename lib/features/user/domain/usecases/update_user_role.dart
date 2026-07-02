@@ -9,3 +9,6 @@ class UpdateUserRole {
     return repository.updateUserRole(uid, role);
   }
 }
+
+
+// implements UseCase

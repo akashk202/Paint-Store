@@ -314,6 +314,8 @@ class _TextureList extends StatelessWidget {
                                 width: 55,
                                 height: 55,
                                 fit: BoxFit.cover,
+                                memCacheWidth: 110,
+                                memCacheHeight: 110,
                                 placeholder: (c, u) => Container(width: 55, height: 55, color: Colors.grey.shade200),
                                 errorWidget: (c, u, e) => Container(width: 55, height: 55, color: Colors.grey.shade100, child: const Icon(Iconsax.gallery_slash)),
                               ),
@@ -338,7 +340,7 @@ class _TextureList extends StatelessWidget {
                               ],
                             ),
                           ),
-                        ).animate().fadeIn(delay: (index * 40).ms, duration: 250.ms); // Animate list items
+                        ).animate().fadeIn(delay: (index < 6 ? index * 40 : 0).ms, duration: 250.ms); // Animate list items
                       },
                     );
                   });

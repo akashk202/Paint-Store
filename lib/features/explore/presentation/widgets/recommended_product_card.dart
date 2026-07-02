@@ -31,6 +31,7 @@ class RecommendedProductCard extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: product.mainImageUrl,
                   fit: BoxFit.cover,
+                  memCacheWidth: 300,
                   placeholder: (_, __) => Container(color: Colors.grey.shade200),
                   errorWidget: (_, __, ___) => const Icon(Iconsax.gallery_slash),
                 ),

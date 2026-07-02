@@ -9,3 +9,6 @@ class ApproveManagerRequest {
     return repository.approveManagerRequest(uid);
   }
 }
+
+
+// implements UseCase

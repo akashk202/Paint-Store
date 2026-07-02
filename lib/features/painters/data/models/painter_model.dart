@@ -1,22 +1,20 @@
-class Painter {
-  final String key;
-  final String name;
-  final String location;
-  final String? phone;
-  final int dailyFare;
-  final String? imageUrl;
+import '../../../painters/domain/entities/painter_entity.dart';
+export '../../../painters/domain/entities/painter_entity.dart' show Painter;
 
-  Painter({
-    required this.key,
-    required this.name,
-    required this.location,
-    this.phone,
-    required this.dailyFare,
-    this.imageUrl,
+/// Data-layer model that adds Firebase/JSON serialisation on top of the
+/// domain [Painter] entity.
+class PainterModel extends Painter {
+  const PainterModel({
+    required super.key,
+    required super.name,
+    required super.location,
+    super.phone,
+    required super.dailyFare,
+    super.imageUrl,
   });
 
-  factory Painter.fromMap(String key, Map<dynamic, dynamic> map) {
-    return Painter(
+  factory PainterModel.fromMap(String key, Map<dynamic, dynamic> map) {
+    return PainterModel(
       key: key,
       name: map['name'] ?? '',
       location: map['location'] ?? '',

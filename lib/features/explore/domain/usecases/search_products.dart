@@ -10,3 +10,6 @@ class SearchProducts {
     return repository.searchProducts(query);
   }
 }
+
+
+// implements UseCase

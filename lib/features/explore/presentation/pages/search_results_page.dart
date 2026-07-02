@@ -113,7 +113,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
       itemBuilder: (context, index) {
         return _buildProductCard(context, exploreEntityToProduct(products[index]))
             .animate()
-            .fade(duration: 500.ms, delay: (100 * index).ms)
+            .fade(duration: 500.ms, delay: (index < 6 ? 100 * index : 0).ms)
             .slideY(begin: 0.2, curve: Curves.easeOut);
       },
     );

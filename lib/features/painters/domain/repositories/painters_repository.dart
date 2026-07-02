@@ -1,5 +1,8 @@
-import 'package:c_h_p/features/painters/data/models/painter_model.dart';
+import '../entities/painter_entity.dart';
 
 abstract class PaintersRepository {
   Stream<List<Painter>> watchPainters();
 }
+
+
+// Either<Failure, T>

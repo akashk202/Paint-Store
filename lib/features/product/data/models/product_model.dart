@@ -1,78 +1,36 @@
-// Helper class for clickable benefits
-class Benefit {
-  final String image;
-  final String text;
+import '../../../product/domain/entities/product_entity.dart';
+export '../../../product/domain/entities/product_entity.dart' show Benefit, PackSize, Product;
 
-  Benefit({required this.image, required this.text});
-
-  factory Benefit.fromMap(Map<String, dynamic> map) {
-    return Benefit(
-      image: map['image'] ?? '',
-      text: map['text'] ?? '',
-    );
-  }
-}
-
-// Helper class for different pack sizes and their prices
-class PackSize {
-  final String size;
-  final String price;
-
-  PackSize({required this.size, required this.price});
-
-  factory PackSize.fromMap(String size, dynamic price) {
-    return PackSize(
-      size: size,
-      price: price?.toString() ?? '0',
-    );
-  }
-
-  // Helper to get the numeric part of the size for sorting
-  double get numericSize {
-    final first = size.split(' ').first;
-    final cleaned = first.replaceAll(RegExp('[^0-9.]'), '');
-    return double.tryParse(cleaned) ?? 0.0;
-  }
-}
-
-// The main Product class
-class Product {
-  final String key;
-  final String name;
-  final String description;
-  final int stock;
-  final String? brand;
-  final String? category;
-  final String? subCategory;
-  final String mainImageUrl;
-  final String backgroundImageUrl;
-  final List<Benefit> benefits;
-  final List<PackSize> packSizes; // This list will be sorted
-  final String brochureUrl;
-  final int? warrantyYears; // Optional warranty (years)
-
-  Product({
-    required this.key,
-    required this.name,
-    required this.description,
-    required this.stock,
-    this.brand,
-    this.category,
-    this.subCategory,
-    required this.mainImageUrl,
-    required this.backgroundImageUrl,
-    required this.benefits,
-    required this.packSizes,
-    required this.brochureUrl,
-    this.warrantyYears,
+/// Data-layer model that adds Firebase/JSON serialisation on top of the
+/// domain [Product] entity.
+///
+/// We re-export [Product], [Benefit] and [PackSize] from the entity file so
+/// that existing call-sites that import this file continue to compile without
+/// changes during the migration.
+class ProductModel extends Product {
+  const ProductModel({
+    required super.key,
+    required super.name,
+    required super.description,
+    required super.stock,
+    super.brand,
+    super.category,
+    super.subCategory,
+    required super.mainImageUrl,
+    required super.backgroundImageUrl,
+    required super.benefits,
+    required super.packSizes,
+    required super.brochureUrl,
+    super.warrantyYears,
   });
 
-  factory Product.fromMap(String key, Map<String, dynamic> map) {
+  factory ProductModel.fromMap(String key, Map<String, dynamic> map) {
     var benefitList = <Benefit>[];
     if (map['benefits'] is List) {
       for (var item in (map['benefits'] as List)) {
         if (item is Map) {
-          benefitList.add(Benefit.fromMap(Map<String, dynamic>.from(item)));
+          final m = Map<String, dynamic>.from(item);
+          benefitList.add(Benefit(image: m['image'] ?? '', text: m['text'] ?? ''));
         }
       }
     }
@@ -81,7 +39,7 @@ class Product {
     final rawPack = map['packSizes'] ?? map['pack_sizes'] ?? map['sizes'] ?? map['variants'];
     if (rawPack is Map) {
       rawPack.forEach((size, price) {
-        packSizeList.add(PackSize.fromMap(size.toString(), price));
+        packSizeList.add(PackSize(size: size.toString(), price: price?.toString() ?? '0'));
       });
     } else if (rawPack is List) {
       for (final item in rawPack) {
@@ -90,7 +48,7 @@ class Product {
           final size = (i['size'] ?? i['pack'] ?? i['label'] ?? '').toString();
           final price = i['price'] ?? i['mrp'] ?? i['amount'];
           if (size.isNotEmpty) {
-            packSizeList.add(PackSize.fromMap(size, price));
+            packSizeList.add(PackSize(size: size, price: price?.toString() ?? '0'));
           }
         }
       }
@@ -99,8 +57,7 @@ class Product {
       packSizeList.sort((a, b) => a.numericSize.compareTo(b.numericSize));
     }
 
-
-    return Product(
+    return ProductModel(
       key: key,
       name: map['name'] ?? 'No Name',
       description: map['description'] ?? 'No Description',
@@ -108,10 +65,10 @@ class Product {
       brand: map['brand'],
       category: map['category'],
       subCategory: map['subCategory'],
-      mainImageUrl: map['mainImageUrl'] ?? map['imageUrl'] ?? '', // Fallback for old data
+      mainImageUrl: map['mainImageUrl'] ?? map['imageUrl'] ?? '',
       backgroundImageUrl: map['backgroundImageUrl'] ?? '',
       benefits: benefitList,
-      packSizes: packSizeList, // Assign the sorted list
+      packSizes: packSizeList,
       brochureUrl: map['brochureUrl'] ?? '',
       warrantyYears: map['warrantyYears'] is int
           ? map['warrantyYears']

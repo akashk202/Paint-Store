@@ -41,7 +41,7 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
 
     productsMap.forEach((key, value) {
       try {
-        allProducts.add(Product.fromMap(key, Map<String, dynamic>.from(value)));
+        allProducts.add(ProductModel.fromMap(key, Map<String, dynamic>.from(value)));
       } catch (_) {}
     });
 
@@ -76,7 +76,7 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
     final List<Product> products = [];
     productsMap.forEach((key, value) {
       try {
-        products.add(Product.fromMap(key, Map<String, dynamic>.from(value)));
+        products.add(ProductModel.fromMap(key, Map<String, dynamic>.from(value)));
       } catch (_) {}
     });
 

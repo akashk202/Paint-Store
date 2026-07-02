@@ -296,11 +296,16 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
       }
 
       // --- Save to Firebase ---
-      await ref.read(addProductUseCaseProvider).call(productData);
+      final success = await ref.read(productNotifierProvider.notifier).addProduct(productData);
 
       if (mounted) {
-        messenger.showSnackBar(const SnackBar(content: Text('Product added successfully!'), backgroundColor: Colors.green));
-        Navigator.pop(context); // Go back after success
+        if (success) {
+          messenger.showSnackBar(const SnackBar(content: Text('Product added successfully!'), backgroundColor: Colors.green));
+          Navigator.pop(context); // Go back after success
+        } else {
+          final error = ref.read(productNotifierProvider).errorMessage;
+          messenger.showSnackBar(SnackBar(content: Text('Failed to add product: ${error ?? "Unknown error"}'), backgroundColor: Colors.red));
+        }
       }
     } catch (error) {
       debugPrint("Error adding product: $error"); // Log the specific error
