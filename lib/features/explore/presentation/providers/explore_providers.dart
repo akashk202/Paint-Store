@@ -129,6 +129,10 @@ final colorCatalogueNotifierProvider =
 final recommendedProductsProvider =
     FutureProvider<List<ExploreProductEntity>>((ref) async {
   final useCase = ref.read(getRecommendedProductsUseCaseProvider);
-  return useCase(limit: 10);
+  final result = await useCase(10);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (items) => items,
+  );
 });
 

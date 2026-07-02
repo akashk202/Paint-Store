@@ -12,6 +12,7 @@ import '../../domain/usecases/fetch_all_products.dart';
 import '../../domain/usecases/get_products_stream.dart';
 import '../../domain/usecases/upload_raw_file.dart';
 import '../../domain/usecases/upload_image_file.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import 'product_notifier.dart';
 import 'product_state.dart';
 
@@ -58,7 +59,7 @@ final uploadImageFileUseCaseProvider = Provider<UploadImageFile>((ref) {
 
 final productsStreamProvider = StreamProvider<List<Product>>((ref) {
   final getProductsStream = ref.watch(getProductsStreamUseCaseProvider);
-  return getProductsStream();
+  return getProductsStream(const NoParams());
 });
 
 final productNotifierProvider = StateNotifierProvider<ProductNotifier, ProductState>((ref) {

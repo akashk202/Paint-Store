@@ -1,14 +1,15 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../repositories/user_repository.dart';
 
-class ApproveManagerRequest {
+class ApproveManagerRequest implements UseCase<void, String> {
   final UserRepository repository;
 
   ApproveManagerRequest(this.repository);
 
-  Future<void> call(String uid) {
-    return repository.approveManagerRequest(uid);
+  @override
+  Future<Either<Failure, void>> call(String params) {
+    return repository.approveManagerRequest(params);
   }
 }
-
-
-// implements UseCase

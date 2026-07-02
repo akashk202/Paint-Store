@@ -1,14 +1,14 @@
-import '../../domain/repositories/cart_repository.dart';
-import '../../domain/entities/cart_item.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
+import '../entities/cart_item.dart';
+import '../repositories/cart_repository.dart';
 
-class GetCartStream {
+class GetCartStream implements StreamUseCase<List<CartItem>, NoParams> {
   final CartRepository repository;
 
   GetCartStream(this.repository);
 
-  Stream<List<CartItem>> call() {
+  @override
+  Stream<List<CartItem>> call(NoParams params) {
     return repository.cartStream();
   }
 }
-
-// implements UseCase

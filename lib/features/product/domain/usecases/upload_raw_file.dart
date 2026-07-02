@@ -1,15 +1,16 @@
-import 'dart:io';
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../repositories/upload_repository.dart';
+import 'upload_image_file.dart'; // To reuse UploadFileParams
 
-class UploadRawFile {
+class UploadRawFile implements UseCase<String, UploadFileParams> {
   final UploadRepository repository;
 
   UploadRawFile(this.repository);
 
-  Future<String> call(File file, {required String folder}) {
-    return repository.uploadRaw(file, folder: folder);
+  @override
+  Future<Either<Failure, String>> call(UploadFileParams params) {
+    return repository.uploadRaw(params.file, folder: params.folder);
   }
 }
-
-
-// implements UseCase

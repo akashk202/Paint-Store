@@ -22,8 +22,9 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
     String? phone,
   }) async {
     state = state.copyWith(processing: true, completed: false, error: null);
-    try {
-      final orderId = await handlePaymentSuccessUseCase(
+    
+    final result = await handlePaymentSuccessUseCase(
+      HandlePaymentSuccessParams(
         paymentId: paymentId,
         signature: signature,
         totalAmountPaise: totalAmountPaise,
@@ -33,14 +34,19 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         fullName: fullName,
         email: email,
         phone: phone,
-      );
-      
-      state = state.copyWith(
-          processing: false, completed: true, lastOrderId: orderId);
-      return orderId;
-    } catch (e) {
-      state = state.copyWith(processing: false, completed: false, error: e);
-      rethrow;
-    }
+      ),
+    );
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(processing: false, completed: false, error: failure.message);
+        return null;
+      },
+      (orderId) {
+        state = state.copyWith(
+            processing: false, completed: true, lastOrderId: orderId);
+        return orderId;
+      },
+    );
   }
 }

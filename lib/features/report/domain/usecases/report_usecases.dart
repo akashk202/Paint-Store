@@ -1,43 +1,58 @@
+import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../entities/report_entity.dart';
 import '../repositories/report_repository.dart';
 
-class SubmitReport {
+class SubmitReport implements UseCase<void, String> {
   final ReportRepository repository;
 
   SubmitReport(this.repository);
 
-  Future<void> call(String issueText) {
-    return repository.submitIssue(issueText);
+  @override
+  Future<Either<Failure, void>> call(String params) {
+    return repository.submitIssue(params);
   }
 }
 
-class WatchReports {
+class WatchReports implements StreamUseCase<List<ReportEntity>, NoParams> {
   final ReportRepository repository;
 
   WatchReports(this.repository);
 
-  Stream<List<ReportEntity>> call() {
+  @override
+  Stream<List<ReportEntity>> call(NoParams params) {
     return repository.watchReports();
   }
 }
 
-class ResolveReport {
+class ResolveReport implements UseCase<void, ResolveReportParams> {
   final ReportRepository repository;
 
   ResolveReport(this.repository);
 
-  Future<void> call({
-    required String reportKey,
-    required String userId,
-    required String issueText,
-  }) {
+  @override
+  Future<Either<Failure, void>> call(ResolveReportParams params) {
     return repository.resolveReport(
-      reportKey: reportKey,
-      userId: userId,
-      issueText: issueText,
+      reportKey: params.reportKey,
+      userId: params.userId,
+      issueText: params.issueText,
     );
   }
 }
 
+class ResolveReportParams extends Equatable {
+  final String reportKey;
+  final String userId;
+  final String issueText;
 
-// implements UseCase
+  const ResolveReportParams({
+    required this.reportKey,
+    required this.userId,
+    required this.issueText,
+  });
+
+  @override
+  List<Object?> get props => [reportKey, userId, issueText];
+}

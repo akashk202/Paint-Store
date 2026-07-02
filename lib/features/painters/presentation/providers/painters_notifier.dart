@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:c_h_p/features/painters/data/models/painter_model.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../../domain/usecases/painters_usecases.dart';
 
 class PaintersState {
@@ -40,7 +41,7 @@ class PaintersNotifier extends StateNotifier<PaintersState> {
   void _subscribe() {
     state = state.copyWith(loading: true, error: null);
     _sub?.cancel();
-    _sub = _watchPainters().listen(
+    _sub = _watchPainters(const NoParams()).listen(
       (list) {
         state = state.copyWith(loading: false, painters: list, error: null);
       },

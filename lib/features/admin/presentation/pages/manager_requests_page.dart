@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import 'package:c_h_p/features/user/presentation/providers/user_providers.dart';
 
 class ManagerRequestsPage extends ConsumerStatefulWidget {
@@ -11,7 +12,6 @@ class ManagerRequestsPage extends ConsumerStatefulWidget {
 }
 
 class _ManagerRequestsPageState extends ConsumerState<ManagerRequestsPage> {
-
   List<Map<String, dynamic>> _pendingRequests = [];
   bool _isLoading = true;
 
@@ -22,37 +22,61 @@ class _ManagerRequestsPageState extends ConsumerState<ManagerRequestsPage> {
   }
 
   Future<void> _fetchPendingRequests() async {
-    try {
-      final requests = await ref.read(fetchPendingManagerRequestsUseCaseProvider).call();
-      if (!mounted) return;
-      setState(() {
-        _pendingRequests = requests;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load requests: $e')));
-    }
+    final result = await ref.read(fetchPendingManagerRequestsUseCaseProvider).call(const NoParams());
+    if (!mounted) return;
+    result.fold(
+      (failure) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load requests: ${failure.message}')));
+      },
+      (requests) {
+        setState(() {
+          _pendingRequests = requests;
+          _isLoading = false;
+        });
+      },
+    );
   }
 
   Future<void> _approveRequest(String uid) async {
-    await ref.read(approveManagerRequestUseCaseProvider).call(uid);
-    if (!mounted) return;
-    await _fetchPendingRequests();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Manager request approved")),
+    final result = await ref.read(approveManagerRequestUseCaseProvider).call(uid);
+    result.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Failed to approve request: ${failure.message}"), backgroundColor: Colors.red),
+          );
+        }
+      },
+      (_) async {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Manager request approved")),
+          );
+          await _fetchPendingRequests();
+        }
+      },
     );
   }
 
   Future<void> _denyRequest(String uid) async {
-    await ref.read(denyManagerRequestUseCaseProvider).call(uid);
-    if (!mounted) return;
-    await _fetchPendingRequests();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Manager request denied")),
+    final result = await ref.read(denyManagerRequestUseCaseProvider).call(uid);
+    result.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Failed to deny request: ${failure.message}"), backgroundColor: Colors.red),
+          );
+        }
+      },
+      (_) async {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Manager request denied")),
+          );
+          await _fetchPendingRequests();
+        }
+      },
     );
   }
 

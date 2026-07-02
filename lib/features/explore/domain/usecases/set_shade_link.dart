@@ -1,14 +1,26 @@
+import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../repositories/color_catalogue_repository.dart';
 
-class SetShadeLink {
+class SetShadeLink implements UseCase<void, SetShadeLinkParams> {
   final ColorCatalogueRepository repository;
 
   SetShadeLink(this.repository);
 
-  Future<void> call(String shadeCode, Map<String, dynamic> data) {
-    return repository.setShadeLink(shadeCode, data);
+  @override
+  Future<Either<Failure, void>> call(SetShadeLinkParams params) {
+    return repository.setShadeLink(params.shadeCode, params.data);
   }
 }
 
+class SetShadeLinkParams extends Equatable {
+  final String shadeCode;
+  final Map<String, dynamic> data;
 
-// implements UseCase
+  const SetShadeLinkParams({required this.shadeCode, required this.data});
+
+  @override
+  List<Object?> get props => [shadeCode, data];
+}

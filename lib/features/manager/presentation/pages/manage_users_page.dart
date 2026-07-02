@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:c_h_p/features/user/presentation/providers/user_providers.dart';
+import 'package:c_h_p/features/user/domain/usecases/update_user_role.dart';
 
 class ManageUsersPage extends ConsumerWidget {
   const ManageUsersPage({super.key});
@@ -76,20 +77,22 @@ class ManageUsersPage extends ConsumerWidget {
                   isThreeLine: true,
                   trailing: PopupMenuButton<String>(
                           onSelected: (value) async {
-                            try {
-                              await ref.read(updateUserRoleUseCaseProvider).call(uid: uid, role: value);
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text('Role updated to $value')),
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Failed: $e')),
-                                );
-                              }
+                            final result = await ref.read(updateUserRoleUseCaseProvider).call(
+                              UpdateUserRoleParams(uid: uid, role: value),
+                            );
+                            if (context.mounted) {
+                              result.fold(
+                                (failure) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed: ${failure.message}'), backgroundColor: Colors.red),
+                                  );
+                                },
+                                (_) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Role updated to $value')),
+                                  );
+                                },
+                              );
                             }
                           },
                           itemBuilder: (context) => [

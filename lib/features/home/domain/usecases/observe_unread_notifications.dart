@@ -1,14 +1,13 @@
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../repositories/home_repository.dart';
 
-class ObserveUnreadNotifications {
+class ObserveUnreadNotifications implements StreamUseCase<int, String> {
   final HomeRepository repository;
 
   ObserveUnreadNotifications(this.repository);
 
-  Stream<int> call(String uid) {
-    return repository.unreadCountStream(uid);
+  @override
+  Stream<int> call(String params) {
+    return repository.unreadCountStream(params);
   }
 }
-
-
-// implements UseCase

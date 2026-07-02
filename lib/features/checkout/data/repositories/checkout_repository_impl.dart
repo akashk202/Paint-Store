@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
 import '../../domain/entities/checkout_profile.dart';
 import '../../domain/repositories/checkout_repository.dart';
 import '../datasources/checkout_remote_datasource.dart';
@@ -9,42 +11,57 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   CheckoutRepositoryImpl(this.remote);
 
   @override
-  Future<CheckoutProfile?> fetchUserProfile() async {
-    final signedInUser = remote.fetchSignedInUserDetails();
-    final profileMap = await remote.fetchUserProfile();
+  Future<Either<Failure, CheckoutProfile?>> fetchUserProfile() async {
+    try {
+      final signedInUser = remote.fetchSignedInUserDetails();
+      final profileMap = await remote.fetchUserProfile();
 
-    if (profileMap == null &&
-        signedInUser.values.every((value) => value.isEmpty)) {
-      return null;
+      if (profileMap == null &&
+          signedInUser.values.every((value) => value.isEmpty)) {
+        return const Right(null);
+      }
+
+      final profile = CheckoutProfileModel.fromRemote(
+        signedInUser: signedInUser,
+        profileMap: profileMap,
+      );
+      return Right(profile);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
-
-    return CheckoutProfileModel.fromRemote(
-      signedInUser: signedInUser,
-      profileMap: profileMap,
-    );
   }
 
   @override
-  Future<void> updateUserProfile({
+  Future<Either<Failure, void>> updateUserProfile({
     required String fullName,
     required String phone,
     required String email,
     required String address,
     double? lat,
     double? lng,
-  }) {
-    return remote.updateUserProfile(
-      fullName: fullName,
-      phone: phone,
-      email: email,
-      address: address,
-      lat: lat,
-      lng: lng,
-    );
+  }) async {
+    try {
+      await remote.updateUserProfile(
+        fullName: fullName,
+        phone: phone,
+        email: email,
+        address: address,
+        lat: lat,
+        lng: lng,
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<List<String>> fetchCartItemNames() {
-    return remote.fetchCartItemNames();
+  Future<Either<Failure, List<String>>> fetchCartItemNames() async {
+    try {
+      final names = await remote.fetchCartItemNames();
+      return Right(names);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }

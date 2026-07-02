@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
 import '../../domain/repositories/payment_repository.dart';
 import '../datasources/payment_remote_datasource.dart';
 
@@ -7,12 +9,17 @@ class PaymentRepositoryImpl implements PaymentRepository {
   PaymentRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<List<String>> fetchCartItemNames() {
-    return remoteDataSource.fetchCartItemNames();
+  Future<Either<Failure, List<String>>> fetchCartItemNames() async {
+    try {
+      final names = await remoteDataSource.fetchCartItemNames();
+      return Right(names);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<String?> saveOrder({
+  Future<Either<Failure, String?>> saveOrder({
     required String paymentId,
     String? signature,
     required int totalAmountPaise,
@@ -23,23 +30,28 @@ class PaymentRepositoryImpl implements PaymentRepository {
     String? email,
     String? phone,
     required List<String> items,
-  }) {
-    return remoteDataSource.saveOrder(
-      paymentId: paymentId,
-      signature: signature,
-      totalAmountPaise: totalAmountPaise,
-      deliveryAddress: deliveryAddress,
-      lat: lat,
-      lng: lng,
-      fullName: fullName,
-      email: email,
-      phone: phone,
-      items: items,
-    );
+  }) async {
+    try {
+      final orderId = await remoteDataSource.saveOrder(
+        paymentId: paymentId,
+        signature: signature,
+        totalAmountPaise: totalAmountPaise,
+        deliveryAddress: deliveryAddress,
+        lat: lat,
+        lng: lng,
+        fullName: fullName,
+        email: email,
+        phone: phone,
+        items: items,
+      );
+      return Right(orderId);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> sendPurchaseNotifications({
+  Future<Either<Failure, void>> sendPurchaseNotifications({
     required List<String> productNames,
     required int totalAmountPaise,
     String? deliveryAddress,
@@ -48,21 +60,31 @@ class PaymentRepositoryImpl implements PaymentRepository {
     String? fullName,
     String? email,
     String? phone,
-  }) {
-    return remoteDataSource.sendPurchaseNotifications(
-      productNames: productNames,
-      totalAmountPaise: totalAmountPaise,
-      deliveryAddress: deliveryAddress,
-      lat: lat,
-      lng: lng,
-      fullName: fullName,
-      email: email,
-      phone: phone,
-    );
+  }) async {
+    try {
+      await remoteDataSource.sendPurchaseNotifications(
+        productNames: productNames,
+        totalAmountPaise: totalAmountPaise,
+        deliveryAddress: deliveryAddress,
+        lat: lat,
+        lng: lng,
+        fullName: fullName,
+        email: email,
+        phone: phone,
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> clearCart() {
-    return remoteDataSource.clearCart();
+  Future<Either<Failure, void>> clearCart() async {
+    try {
+      await remoteDataSource.clearCart();
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }

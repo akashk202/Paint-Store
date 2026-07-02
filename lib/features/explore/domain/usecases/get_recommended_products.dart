@@ -1,16 +1,16 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../entities/explore_product_entity.dart';
-
 import '../repositories/explore_repository.dart';
 
-class GetRecommendedProducts {
+class GetRecommendedProducts implements UseCase<List<ExploreProductEntity>, int> {
   final ExploreRepository repository;
 
   GetRecommendedProducts(this.repository);
 
-  Future<List<ExploreProductEntity>> call({int limit = 10}) {
-    return repository.fetchRecommended(limit: limit);
+  @override
+  Future<Either<Failure, List<ExploreProductEntity>>> call(int params) {
+    return repository.fetchRecommended(limit: params);
   }
 }
-
-
-// implements UseCase

@@ -1,13 +1,15 @@
-import '../../domain/repositories/cart_repository.dart';
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
+import '../repositories/cart_repository.dart';
 
-class RemoveItem {
+class RemoveItem implements UseCase<void, String> {
   final CartRepository repository;
 
   RemoveItem(this.repository);
 
-  Future<void> call(String productKey) {
-    return repository.removeItem(productKey);
+  @override
+  Future<Either<Failure, void>> call(String params) {
+    return repository.removeItem(params);
   }
 }
-
-// implements UseCase

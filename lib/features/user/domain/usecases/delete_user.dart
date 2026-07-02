@@ -1,14 +1,15 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../repositories/user_repository.dart';
 
-class DeleteUser {
+class DeleteUser implements UseCase<void, String> {
   final UserRepository repository;
 
   DeleteUser(this.repository);
 
-  Future<void> call(String uid) {
-    return repository.deleteUser(uid);
+  @override
+  Future<Either<Failure, void>> call(String params) {
+    return repository.deleteUser(params);
   }
 }
-
-
-// implements UseCase

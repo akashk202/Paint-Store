@@ -1,6 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 
 import '../../domain/usecases/get_all_home_products.dart';
 import '../../domain/usecases/observe_unread_notifications.dart';
@@ -22,13 +22,16 @@ class HomeNotifier extends StateNotifier<HomeState> {
     if (_loaded) return;
 
     state = state.copyWith(loading: true, error: null);
-    try {
-      final products = await getAllHomeProducts();
-      state = state.copyWith(loading: false, products: products, error: null);
-      _loaded = true;
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e);
-    }
+    final result = await getAllHomeProducts(const NoParams());
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (products) {
+        state = state.copyWith(loading: false, products: products, error: null);
+        _loaded = true;
+      },
+    );
   }
 
   Future<void> refreshProducts() async {

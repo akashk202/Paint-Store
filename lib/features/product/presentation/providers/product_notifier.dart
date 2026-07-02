@@ -20,37 +20,46 @@ class ProductNotifier extends StateNotifier<ProductState> {
 
   Future<bool> addProduct(Map<String, dynamic> data) async {
     state = state.copyWith(isLoading: true);
-    try {
-      await _addProduct(data);
-      state = state.copyWith(isLoading: false, isSuccess: true);
-      return true;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
-      return false;
-    }
+    final result = await _addProduct(data);
+    return result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        return false;
+      },
+      (_) {
+        state = state.copyWith(isLoading: false, isSuccess: true);
+        return true;
+      },
+    );
   }
 
   Future<bool> deleteProduct(String key) async {
     state = state.copyWith(isLoading: true);
-    try {
-      await _deleteProduct(key);
-      state = state.copyWith(isLoading: false, isSuccess: true);
-      return true;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
-      return false;
-    }
+    final result = await _deleteProduct(key);
+    return result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        return false;
+      },
+      (_) {
+        state = state.copyWith(isLoading: false, isSuccess: true);
+        return true;
+      },
+    );
   }
 
   Future<bool> updateProduct(String key, Map<String, dynamic> data) async {
     state = state.copyWith(isLoading: true);
-    try {
-      await _updateProduct(key, data);
-      state = state.copyWith(isLoading: false, isSuccess: true);
-      return true;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
-      return false;
-    }
+    final result = await _updateProduct(UpdateProductParams(key: key, data: data));
+    return result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        return false;
+      },
+      (_) {
+        state = state.copyWith(isLoading: false, isSuccess: true);
+        return true;
+      },
+    );
   }
 }

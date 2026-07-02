@@ -1,13 +1,15 @@
-import '../../domain/repositories/cart_repository.dart';
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
+import '../repositories/cart_repository.dart';
 
-class ClearCart {
+class ClearCart implements UseCase<void, NoParams> {
   final CartRepository repository;
 
   ClearCart(this.repository);
 
-  Future<void> call() {
+  @override
+  Future<Either<Failure, void>> call(NoParams params) {
     return repository.clearCart();
   }
 }
-
-// implements UseCase

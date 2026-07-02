@@ -3,12 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../../data/datasources/user_remote_datasource.dart';
 import '../../data/repositories/user_repository_impl.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../domain/usecases/get_user_profile.dart';
 import '../../domain/usecases/update_user_profile.dart';
 import '../../domain/usecases/update_profile_picture.dart';
+import '../../domain/usecases/delete_profile_picture.dart';
 import '../../domain/usecases/update_user_password.dart';
 import '../../domain/usecases/get_user_role.dart';
 import '../../domain/usecases/fetch_pending_manager_requests.dart';
@@ -92,5 +94,5 @@ final deleteUserUseCaseProvider = Provider<DeleteUser>((ref) {
 });
 
 final allUsersStreamProvider = StreamProvider<Map<String, dynamic>>((ref) {
-  return ref.watch(fetchAllUsersStreamUseCaseProvider).call();
+  return ref.watch(fetchAllUsersStreamUseCaseProvider).call(const NoParams());
 });

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 
 import '../../domain/usecases/get_cart_stream.dart';
 import '../../domain/usecases/update_quantity.dart';
@@ -41,54 +42,54 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(loading: true, error: null);
 
     _subscription?.cancel();
-    _subscription = _getCartStream().listen(
+    _subscription = _getCartStream(const NoParams()).listen(
       (items) {
         state = state.copyWith(loading: false, items: items);
       },
       onError: (error) {
-        state = state.copyWith(loading: false, error: error);
+        state = state.copyWith(loading: false, error: error.toString());
       },
     );
   }
 
   // Update item quantity
   Future<void> updateItemQuantity(String productKey, int quantity) async {
-    try {
-      await _updateQuantityUseCase(productKey, quantity);
-    } catch (e) {
-      state = state.copyWith(error: e);
-    }
+    final result = await _updateQuantityUseCase(
+      UpdateQuantityParams(productKey: productKey, quantity: quantity),
+    );
+    result.fold(
+      (failure) => state = state.copyWith(error: failure.message),
+      (_) {},
+    );
   }
 
   // Change item size
   Future<void> changeItemSize(String productKey, String size, String price) async {
-    try {
-      await _changeSizeUseCase(
-        productKey: productKey,
-        size: size,
-        price: price,
-      );
-    } catch (e) {
-      state = state.copyWith(error: e);
-    }
+    final result = await _changeSizeUseCase(
+      ChangeSizeParams(productKey: productKey, size: size, price: price),
+    );
+    result.fold(
+      (failure) => state = state.copyWith(error: failure.message),
+      (_) {},
+    );
   }
 
   // Remove item from cart
   Future<void> removeCartItem(String productKey) async {
-    try {
-      await _removeItemUseCase(productKey);
-    } catch (e) {
-      state = state.copyWith(error: e);
-    }
+    final result = await _removeItemUseCase(productKey);
+    result.fold(
+      (failure) => state = state.copyWith(error: failure.message),
+      (_) {},
+    );
   }
 
   // Clear entire cart
   Future<void> clearAllItems() async {
-    try {
-      await _clearCartUseCase();
-    } catch (e) {
-      state = state.copyWith(error: e);
-    }
+    final result = await _clearCartUseCase(const NoParams());
+    result.fold(
+      (failure) => state = state.copyWith(error: failure.message),
+      (_) {},
+    );
   }
 
   // Add or update item
@@ -99,17 +100,19 @@ class CartNotifier extends StateNotifier<CartState> {
     required String size,
     required String price,
   }) async {
-    try {
-      await _addOrUpdateItemUseCase(
+    final result = await _addOrUpdateItemUseCase(
+      AddOrUpdateItemParams(
         productKey: productKey,
         name: name,
         imageUrl: imageUrl,
         size: size,
         price: price,
-      );
-    } catch (e) {
-      state = state.copyWith(error: e);
-    }
+      ),
+    );
+    result.fold(
+      (failure) => state = state.copyWith(error: failure.message),
+      (_) {},
+    );
   }
 
   // Compatibility wrappers while the rest of the UI is being migrated.

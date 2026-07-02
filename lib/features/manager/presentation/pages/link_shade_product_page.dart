@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:c_h_p/features/explore/presentation/providers/explore_providers.dart';
+import 'package:c_h_p/features/explore/domain/usecases/set_shade_link.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import 'package:c_h_p/features/product/presentation/providers/product_providers.dart';
 
 class LinkShadeProductPage extends ConsumerStatefulWidget {
@@ -35,25 +37,28 @@ class _LinkShadeProductPageState extends ConsumerState<LinkShadeProductPage> {
 
   Future<void> _loadExistingLink() async {
     if (_selectedShadeCode.isEmpty) return;
-    try {
-      _currentLink = await ref.read(fetchShadeLinkUseCaseProvider).call(_selectedShadeCode);
-    } catch (_) {
-      _currentLink = null;
-    }
+    final result = await ref.read(fetchShadeLinkUseCaseProvider).call(_selectedShadeCode);
+    result.fold(
+      (failure) => _currentLink = null,
+      (link) => _currentLink = link,
+    );
     if (mounted) setState(() {});
   }
 
   Future<void> _unlink() async {
     if (_selectedShadeCode.isEmpty) return;
-    try {
-      await ref.read(removeShadeLinkUseCaseProvider).call(_selectedShadeCode);
-      _currentLink = null;
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unlinked')));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to unlink: $e')));
-    }
+    final result = await ref.read(removeShadeLinkUseCaseProvider).call(_selectedShadeCode);
+    result.fold(
+      (failure) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to unlink: ${failure.message}')));
+      },
+      (_) {
+        _currentLink = null;
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unlinked')));
+      },
+    );
     if (mounted) setState(() {});
   }
 
@@ -77,21 +82,30 @@ class _LinkShadeProductPageState extends ConsumerState<LinkShadeProductPage> {
       ),
     );
     if (ok != true) return;
-    try {
-      await ref.read(setShadeLinkUseCaseProvider).call(_selectedShadeCode, {
-        'productId': _selectedProductId,
-        'productName': _selectedProductName,
-        'shadeCode': _selectedShadeCode,
-        'shadeName': _selectedShadeName,
-        'timestamp': ServerValue.timestamp,
-      });
-      await _loadExistingLink();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Linked successfully')));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
-    }
+    final result = await ref.read(setShadeLinkUseCaseProvider).call(
+      SetShadeLinkParams(
+        shadeCode: _selectedShadeCode,
+        data: {
+          'productId': _selectedProductId,
+          'productName': _selectedProductName,
+          'shadeCode': _selectedShadeCode,
+          'shadeName': _selectedShadeName,
+          'timestamp': ServerValue.timestamp,
+        },
+      ),
+    );
+    result.fold(
+      (failure) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to link: ${failure.message}')));
+      },
+      (_) async {
+        await _loadExistingLink();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Linked successfully')));
+      },
+    );
+    if (mounted) setState(() {});
   }
 
   @override
@@ -151,7 +165,7 @@ class _LinkShadeProductPageState extends ConsumerState<LinkShadeProductPage> {
           SizedBox(
             height: 180,
             child: StreamBuilder<Map<String, dynamic>>(
-              stream: ref.watch(getColorCategoriesStreamUseCaseProvider).call(),
+              stream: ref.watch(getColorCategoriesStreamUseCaseProvider).call(const NoParams()),
               builder: (context, snapshot) {
                 final data = snapshot.data;
                 if (data == null || data.isEmpty) {

@@ -16,15 +16,20 @@ class ProductDisplayNotifier extends StateNotifier<ProductDisplayState> {
     String? brand,
   }) async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      final products = await _getProductsByFilter(
+    final result = await _getProductsByFilter(
+      GetProductsByFilterParams(
         category: category,
         subCategory: subCategory,
         brand: brand,
-      );
-      state = state.copyWith(loading: false, products: products);
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e);
-    }
+      ),
+    );
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (products) {
+        state = state.copyWith(loading: false, products: products);
+      },
+    );
   }
 }

@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 
 import '../../domain/usecases/get_user_profile.dart';
 import '../../domain/usecases/update_user_profile.dart';
 import '../../domain/usecases/update_profile_picture.dart';
+import '../../domain/usecases/delete_profile_picture.dart';
 import '../../domain/usecases/update_user_password.dart';
 import '../../domain/usecases/get_user_role.dart';
 import 'user_state.dart';
@@ -33,22 +35,28 @@ class UserNotifier extends StateNotifier<UserState> {
 
   Future<void> loadProfile() async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      final profile = await _getUserProfile();
-      state = state.copyWith(loading: false, profile: profile, role: profile.role);
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e.toString());
-    }
+    final result = await _getUserProfile(const NoParams());
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (profile) {
+        state = state.copyWith(loading: false, profile: profile, role: profile.role);
+      },
+    );
   }
 
   Future<void> loadRole(String uid) async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      final role = await _getUserRole(uid);
-      state = state.copyWith(loading: false, role: role);
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e.toString());
-    }
+    final result = await _getUserRole(uid);
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (role) {
+        state = state.copyWith(loading: false, role: role);
+      },
+    );
   }
 
   Future<void> updateProfile({
@@ -60,56 +68,90 @@ class UserNotifier extends StateNotifier<UserState> {
     double? lng,
   }) async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      await _updateUserProfile(
+    final result = await _updateUserProfile(
+      UpdateUserProfileParams(
         name: name,
         phone: phone,
         address: address,
         pincode: pincode,
         lat: lat,
         lng: lng,
-      );
-      // Reload profile to get fresh data
-      final profile = await _getUserProfile();
-      state = state.copyWith(loading: false, profile: profile);
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e.toString());
-      rethrow;
-    }
+      ),
+    );
+    
+    await result.fold(
+      (failure) async {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (_) async {
+        // Reload profile to get fresh data
+        final profileResult = await _getUserProfile(const NoParams());
+        profileResult.fold(
+          (failure) {
+            state = state.copyWith(loading: false, error: failure.message);
+          },
+          (profile) {
+            state = state.copyWith(loading: false, profile: profile);
+          },
+        );
+      },
+    );
   }
 
   Future<void> updateProfilePicture(File imageFile) async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      await _updateProfilePicture(imageFile);
-      final profile = await _getUserProfile();
-      state = state.copyWith(loading: false, profile: profile);
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e.toString());
-      rethrow;
-    }
+    final result = await _updateProfilePicture(imageFile);
+    await result.fold(
+      (failure) async {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (_) async {
+        final profileResult = await _getUserProfile(const NoParams());
+        profileResult.fold(
+          (failure) {
+            state = state.copyWith(loading: false, error: failure.message);
+          },
+          (profile) {
+            state = state.copyWith(loading: false, profile: profile);
+          },
+        );
+      },
+    );
   }
 
   Future<void> deleteProfilePicture() async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      await _deleteProfilePicture();
-      final profile = await _getUserProfile();
-      state = state.copyWith(loading: false, profile: profile);
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e.toString());
-      rethrow;
-    }
+    final result = await _deleteProfilePicture(const NoParams());
+    await result.fold(
+      (failure) async {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (_) async {
+        final profileResult = await _getUserProfile(const NoParams());
+        profileResult.fold(
+          (failure) {
+            state = state.copyWith(loading: false, error: failure.message);
+          },
+          (profile) {
+            state = state.copyWith(loading: false, profile: profile);
+          },
+        );
+      },
+    );
   }
 
   Future<void> updatePassword(String currentPassword, String newPassword) async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      await _updateUserPassword(currentPassword, newPassword);
-      state = state.copyWith(loading: false);
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e.toString());
-      rethrow;
-    }
+    final result = await _updateUserPassword(
+      UpdateUserPasswordParams(currentPassword: currentPassword, newPassword: newPassword),
+    );
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (_) {
+        state = state.copyWith(loading: false);
+      },
+    );
   }
 }

@@ -1,14 +1,15 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../repositories/product_repository.dart';
 
-class DeleteProduct {
+class DeleteProduct implements UseCase<void, String> {
   final ProductRepository repository;
 
   DeleteProduct(this.repository);
 
-  Future<void> call(String key) {
-    return repository.deleteProduct(key);
+  @override
+  Future<Either<Failure, void>> call(String params) {
+    return repository.deleteProduct(params);
   }
 }
-
-
-// implements UseCase

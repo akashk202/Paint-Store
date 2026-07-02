@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:c_h_p/features/product/presentation/pages/product_detail_page.dart';
 import 'package:c_h_p/features/explore/presentation/providers/explore_providers.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 
 Color hexToColor(String code) {
   try {
@@ -36,7 +37,7 @@ class _LatestColorsPageState extends ConsumerState<LatestColorsPage> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: StreamBuilder<Map<String, dynamic>>(
-        stream: latestColorsStream.call(),
+        stream: latestColorsStream.call(const NoParams()),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -81,23 +82,27 @@ class _LatestColorsPageState extends ConsumerState<LatestColorsPage> {
                   }
                   try {
                     // Use ResolveLinkedProduct UseCase
-                    final resolveLinkedProduct =
-                        ref.read(resolveLinkedProductUseCaseProvider);
-                    final linkedProduct =
-                        await resolveLinkedProduct(code);
-                    if (linkedProduct != null) {
-                      if (!context.mounted) return;
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => ProductDetailPage(
-                                  product: linkedProduct)));
-                      return;
-                    }
+                    final resolveLinkedProduct = ref.read(resolveLinkedProductUseCaseProvider);
+                    final result = await resolveLinkedProduct(code);
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content:
-                            Text('No product linked to this shade yet')));
+                    result.fold(
+                      (failure) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to open: ${failure.message}')));
+                      },
+                      (linkedProduct) {
+                        if (linkedProduct != null) {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => ProductDetailPage(
+                                      product: linkedProduct)));
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              content: Text('No product linked to this shade yet')));
+                        }
+                      },
+                    );
                   } catch (e) {
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(

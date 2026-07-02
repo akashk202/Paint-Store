@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:c_h_p/features/cart/presentation/providers/cart_providers.dart';
+import 'package:c_h_p/features/explore/domain/usecases/get_similar_products.dart';
 
 class ProductDetailPage extends ConsumerStatefulWidget {
   final Product product;
@@ -24,22 +25,29 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
 
   Future<List<Product>> _loadSimilarProducts() async {
     final getSimilarProducts = ref.read(getSimilarProductsUseCaseProvider);
-    final entities = await getSimilarProducts(widget.product, limit: 10);
-    return entities.map((e) => Product(
-      key: e.key,
-      name: e.name,
-      description: e.description,
-      stock: e.stock,
-      brand: e.brand,
-      category: e.category,
-      subCategory: e.subCategory,
-      mainImageUrl: e.mainImageUrl,
-      backgroundImageUrl: e.backgroundImageUrl,
-      benefits: e.benefits.map((b) => Benefit(image: b.image, text: b.text)).toList(),
-      packSizes: e.packSizes.map((p) => PackSize(size: p.size, price: p.price)).toList(),
-      brochureUrl: e.brochureUrl,
-      warrantyYears: e.warrantyYears,
-    )).toList();
+    final result = await getSimilarProducts(
+      GetSimilarProductsParams(anchor: widget.product, limit: 10),
+    );
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (entities) {
+        return entities.map((e) => Product(
+          key: e.key,
+          name: e.name,
+          description: e.description,
+          stock: e.stock,
+          brand: e.brand,
+          category: e.category,
+          subCategory: e.subCategory,
+          mainImageUrl: e.mainImageUrl,
+          backgroundImageUrl: e.backgroundImageUrl,
+          benefits: e.benefits.map((b) => Benefit(image: b.image, text: b.text)).toList(),
+          packSizes: e.packSizes.map((p) => PackSize(size: p.size, price: p.price)).toList(),
+          brochureUrl: e.brochureUrl,
+          warrantyYears: e.warrantyYears,
+        )).toList();
+      },
+    );
   }
 
   @override

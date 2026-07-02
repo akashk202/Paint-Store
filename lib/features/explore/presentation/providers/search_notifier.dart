@@ -11,16 +11,17 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
   Future<void> search(String query) async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      final results = await searchProductsUseCase(query);
-      
-      // If no results, we could fetch some suggestions. For now, we'll just return empty or random
-      state = state.copyWith(
-        loading: false,
-        results: results,
-      );
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e);
-    }
+    final result = await searchProductsUseCase(query);
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (results) {
+        state = state.copyWith(
+          loading: false,
+          results: results,
+        );
+      },
+    );
   }
 }

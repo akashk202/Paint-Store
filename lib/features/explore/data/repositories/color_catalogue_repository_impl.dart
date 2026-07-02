@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
 import '../../domain/entities/color_shade.dart';
 import '../../domain/repositories/color_catalogue_repository.dart';
 import '../datasources/color_catalogue_remote_datasource.dart';
@@ -9,18 +11,33 @@ class ColorCatalogueRepositoryImpl implements ColorCatalogueRepository {
   ColorCatalogueRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<List<ColorShade>> fetchAllShades() {
-    return remoteDataSource.fetchAllShades();
+  Future<Either<Failure, List<ColorShade>>> fetchAllShades() async {
+    try {
+      final result = await remoteDataSource.fetchAllShades();
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<Product?> resolveLinkedProduct(String shadeCode) {
-    return remoteDataSource.resolveLinkedProduct(shadeCode);
+  Future<Either<Failure, Product?>> resolveLinkedProduct(String shadeCode) async {
+    try {
+      final result = await remoteDataSource.resolveLinkedProduct(shadeCode);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<List<Product>> fetchProductsByShadeName(String shadeName) {
-    return remoteDataSource.fetchProductsByShadeName(shadeName);
+  Future<Either<Failure, List<Product>>> fetchProductsByShadeName(String shadeName) async {
+    try {
+      final result = await remoteDataSource.fetchProductsByShadeName(shadeName);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
@@ -46,17 +63,32 @@ class ColorCatalogueRepositoryImpl implements ColorCatalogueRepository {
   }
 
   @override
-  Future<Map<String, dynamic>?> fetchShadeLink(String shadeCode) {
-    return remoteDataSource.fetchShadeLink(shadeCode);
+  Future<Either<Failure, Map<String, dynamic>?>> fetchShadeLink(String shadeCode) async {
+    try {
+      final result = await remoteDataSource.fetchShadeLink(shadeCode);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> setShadeLink(String shadeCode, Map<String, dynamic> data) {
-    return remoteDataSource.setShadeLink(shadeCode, data);
+  Future<Either<Failure, void>> setShadeLink(String shadeCode, Map<String, dynamic> data) async {
+    try {
+      await remoteDataSource.setShadeLink(shadeCode, data);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> removeShadeLink(String shadeCode) {
-    return remoteDataSource.removeShadeLink(shadeCode);
+  Future<Either<Failure, void>> removeShadeLink(String shadeCode) async {
+    try {
+      await remoteDataSource.removeShadeLink(shadeCode);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }

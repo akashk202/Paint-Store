@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
 import 'package:c_h_p/features/user/presentation/providers/user_providers.dart';
 import 'dart:async';
 import 'package:c_h_p/features/auth/presentation/pages/login_page.dart';
@@ -62,7 +64,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   bool _isSearchLoading = false;
   bool _productsLoaded = false;
   bool _imagesPrecached = false;
-  StreamSubscription<String>? _roleSub;
+  StreamSubscription<Either<Failure, String>>? _roleSub;
 
   @override
   void initState() {
@@ -80,9 +82,12 @@ class _HomePageState extends ConsumerState<HomePage> {
         _roleSub?.cancel();
         if (user.email != 'akashkrishna389@gmail.com') {
           _roleSub = Stream.fromFuture(ref.read(userRepositoryProvider).fetchUserRole(user.uid))
-              .listen((role) {
+              .listen((result) {
             if (!mounted) return;
-            setState(() => _userRole = role);
+            result.fold(
+              (failure) => debugPrint("Error fetching role: ${failure.message}"),
+              (role) => setState(() => _userRole = role),
+            );
           });
         }
       }
@@ -149,13 +154,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (mounted) setState(() => _userRole = 'Admin');
       return;
     }
-    try {
-      final repo = ref.read(userRepositoryProvider);
-      final role = await repo.fetchUserRole(user.uid);
-      if (mounted) setState(() => _userRole = role);
-    } catch (e) {
-      debugPrint("Error fetching user role: $e");
-    }
+    final repo = ref.read(userRepositoryProvider);
+    final result = await repo.fetchUserRole(user.uid);
+    result.fold(
+      (failure) => debugPrint("Error fetching user role: ${failure.message}"),
+      (role) {
+        if (mounted) setState(() => _userRole = role);
+      },
+    );
   }
 
   Future<void> _logout() async {

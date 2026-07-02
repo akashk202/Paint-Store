@@ -235,19 +235,21 @@ class ShadeDetailPage extends ConsumerWidget {
                     final resolveLinkedProduct =
                         ref.read(resolveLinkedProductUseCaseProvider);
                     final code = shade.code;
-                    final linkedProduct =
-                        await resolveLinkedProduct(code);
-
-                    if (linkedProduct != null) {
-                      if (!context.mounted) return;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) =>
-                                ProductDetailPage(product: linkedProduct)),
-                      );
-                      return;
-                    }
+                    final result = await resolveLinkedProduct(code);
+                    if (!context.mounted) return;
+                    result.fold(
+                      (failure) => debugPrint("Error resolving linked product: ${failure.message}"),
+                      (linkedProduct) {
+                        if (linkedProduct != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    ProductDetailPage(product: linkedProduct)),
+                          );
+                        }
+                      },
+                    );
 
                     if (!context.mounted) return;
                     Navigator.push(
@@ -307,7 +309,12 @@ class _ProductListForShadePageState
     super.initState();
     // Use FetchProductsByShadeName UseCase
     final fetchProductsByShadeName = ref.read(fetchProductsByShadeNameUseCaseProvider);
-    _productsFuture = fetchProductsByShadeName(widget.shadeName);
+    _productsFuture = fetchProductsByShadeName(widget.shadeName).then((res) {
+      return res.fold(
+        (failure) => throw Exception(failure.message),
+        (products) => products,
+      );
+    });
   }
 
   @override

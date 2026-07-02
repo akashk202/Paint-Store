@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
 import '../../domain/repositories/notifications_repository.dart';
 import '../datasources/notifications_remote_datasource.dart';
 
@@ -27,22 +29,42 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   }
 
   @override
-  Future<void> markAllRead(String uid) {
-    return remoteDataSource.markAllRead(uid);
+  Future<Either<Failure, void>> markAllRead(String uid) async {
+    try {
+      await remoteDataSource.markAllRead(uid);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> clearAll(String uid) {
-    return remoteDataSource.clearAll(uid);
+  Future<Either<Failure, void>> clearAll(String uid) async {
+    try {
+      await remoteDataSource.clearAll(uid);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> dismissGlobal(String uid, String signature) {
-    return remoteDataSource.dismissGlobal(uid, signature);
+  Future<Either<Failure, void>> dismissGlobal(String uid, String signature) async {
+    try {
+      await remoteDataSource.dismissGlobal(uid, signature);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> deletePersonal(String uid, String key) {
-    return remoteDataSource.deletePersonal(uid, key);
+  Future<Either<Failure, void>> deletePersonal(String uid, String key) async {
+    try {
+      await remoteDataSource.deletePersonal(uid, key);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }

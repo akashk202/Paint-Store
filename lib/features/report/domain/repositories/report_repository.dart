@@ -1,14 +1,13 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
 import '../entities/report_entity.dart';
 
 abstract class ReportRepository {
-  Future<void> submitIssue(String issueText);
+  Future<Either<Failure, void>> submitIssue(String issueText);
   Stream<List<ReportEntity>> watchReports();
-  Future<void> resolveReport({
+  Future<Either<Failure, void>> resolveReport({
     required String reportKey,
     required String userId,
     required String issueText,
   });
 }
-
-
-// Either<Failure, T>

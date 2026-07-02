@@ -275,25 +275,31 @@ class _CartPageState extends ConsumerState<CartPage> {
     );
   }
 
-  // --- Helper to Fetch Product Details ---
   Future<Map<String, Product?>> _fetchAllProductDetails(
       List<String> productKeys) async {
     final Map<String, Product?> detailsMap = {};
     // Use the UseCase via Riverpod provider
     final fetchProductDetails = ref.read(cartFetchProductDetailsUseCaseProvider);
-    final rawDetails = await fetchProductDetails(productKeys);
-    rawDetails.forEach((key, value) {
-      if (value != null) {
-        try {
-          detailsMap[key] = ProductModel.fromMap(key, value);
-        } catch (e) {
-          debugPrint("Error parsing product details for $key: $e");
-          detailsMap[key] = null;
-        }
-      } else {
-        detailsMap[key] = null;
-      }
-    });
+    final result = await fetchProductDetails(productKeys);
+    result.fold(
+      (failure) {
+        debugPrint("Error fetching product details: ${failure.message}");
+      },
+      (rawDetails) {
+        rawDetails.forEach((key, value) {
+          if (value != null) {
+            try {
+              detailsMap[key] = ProductModel.fromMap(key, value);
+            } catch (e) {
+              debugPrint("Error parsing product details for $key: $e");
+              detailsMap[key] = null;
+            }
+          } else {
+            detailsMap[key] = null;
+          }
+        });
+      },
+    );
     return detailsMap;
   }
 

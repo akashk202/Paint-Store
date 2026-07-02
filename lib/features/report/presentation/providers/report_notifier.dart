@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 
 import '../../domain/entities/report_entity.dart';
 import '../../domain/usecases/report_usecases.dart';
@@ -32,28 +33,41 @@ class ReportNotifier extends StateNotifier<ReportState> {
 
   Future<void> submitIssue(String issueText) async {
     state = state.copyWith(submitting: true, error: null);
-    try {
-      await _submitReport(issueText);
-      state = state.copyWith(submitting: false);
-    } catch (e) {
-      state = state.copyWith(submitting: false, error: e);
-      rethrow;
-    }
+    final result = await _submitReport(issueText);
+    result.fold(
+      (failure) {
+        state = state.copyWith(submitting: false, error: failure.message);
+      },
+      (_) {
+        state = state.copyWith(submitting: false);
+      },
+    );
   }
 
   Stream<List<ReportEntity>> reportsStream() {
-    return _watchReports();
+    return _watchReports(const NoParams());
   }
 
   Future<void> resolve({
     required String reportKey,
     required String userId,
     required String issueText,
-  }) {
-    return _resolveReport(
-      reportKey: reportKey,
-      userId: userId,
-      issueText: issueText,
+  }) async {
+    state = state.copyWith(submitting: true, error: null);
+    final result = await _resolveReport(
+      ResolveReportParams(
+        reportKey: reportKey,
+        userId: userId,
+        issueText: issueText,
+      ),
+    );
+    result.fold(
+      (failure) {
+        state = state.copyWith(submitting: false, error: failure.message);
+      },
+      (_) {
+        state = state.copyWith(submitting: false);
+      },
     );
   }
 }

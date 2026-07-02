@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 
 import '../../domain/usecases/fetch_user_profile.dart';
 import '../../domain/usecases/update_user_profile.dart';
@@ -19,25 +20,28 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
   Future<void> prefillFromAuthAndProfile() async {
     state = state.copyWith(loading: true, error: null);
 
-    try {
-      final profile = await fetchUserProfile();
-      if (profile == null) {
-        state = state.copyWith(loading: false);
-        return;
-      }
+    final result = await fetchUserProfile(const NoParams());
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (profile) {
+        if (profile == null) {
+          state = state.copyWith(loading: false);
+          return;
+        }
 
-      state = state.copyWith(
-        loading: false,
-        name: profile.name,
-        phone: profile.phone,
-        email: profile.email,
-        address: profile.address,
-        lat: profile.lat,
-        lng: profile.lng,
-      );
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e);
-    }
+        state = state.copyWith(
+          loading: false,
+          name: profile.name,
+          phone: profile.phone,
+          email: profile.email,
+          address: profile.address,
+          lat: profile.lat,
+          lng: profile.lng,
+        );
+      },
+    );
   }
 
   void setLatLng(double? lat, double? lng) {
@@ -67,18 +71,23 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     required String address,
   }) async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      await updateUserProfile(
+    final result = await updateUserProfile(
+      UpdateUserProfileParams(
         fullName: fullName,
         phone: phone,
         email: email,
         address: address,
         lat: state.lat,
         lng: state.lng,
-      );
-      state = state.copyWith(loading: false);
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e);
-    }
+      ),
+    );
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (_) {
+        state = state.copyWith(loading: false);
+      },
+    );
   }
 }

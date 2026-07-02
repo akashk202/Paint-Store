@@ -61,13 +61,23 @@ class VisualizerNotifier extends StateNotifier<VisualizerState> {
               '${(c.b * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}'
           .toUpperCase();
           
-      final url = await _visualizeImage(
-        image: image,
-        colorHex: hex,
-        scene: scene,
+      final result = await _visualizeImage(
+        VisualizeImageParams(
+          image: image,
+          colorHex: hex,
+          scene: scene,
+        ),
       );
       
-      state = state.copyWith(processing: false, resultUrl: url, error: null);
+      result.fold(
+        (failure) {
+          state = state.copyWith(
+              processing: false, error: failure.message, resultUrl: null);
+        },
+        (url) {
+          state = state.copyWith(processing: false, resultUrl: url, error: null);
+        },
+      );
     } catch (e) {
       state = state.copyWith(
           processing: false, error: e.toString(), resultUrl: null);

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:c_h_p/features/user/presentation/providers/user_providers.dart';
+import 'package:c_h_p/features/user/domain/usecases/update_user_role.dart';
 
 class AllUsersPage extends ConsumerStatefulWidget {
   const AllUsersPage({super.key});
@@ -36,19 +37,22 @@ class _AllUsersPageState extends ConsumerState<AllUsersPage> {
     );
 
     if (confirm == true) {
-      try {
-        await ref.read(updateUserRoleUseCaseProvider).call(uid: userId, role: 'Manager');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$userName has been promoted to Manager.')),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to promote user: $e'), backgroundColor: Colors.red),
-          );
-        }
+      final result = await ref.read(updateUserRoleUseCaseProvider).call(
+        UpdateUserRoleParams(uid: userId, role: 'Manager'),
+      );
+      if (mounted) {
+        result.fold(
+          (failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to promote user: ${failure.message}'), backgroundColor: Colors.red),
+            );
+          },
+          (_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$userName has been promoted to Manager.')),
+            );
+          },
+        );
       }
     }
   }
@@ -69,22 +73,22 @@ class _AllUsersPageState extends ConsumerState<AllUsersPage> {
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: Text('Delete', style: GoogleFonts.poppins()),
               onPressed: () async {
-                try {
-                  await ref.read(deleteUserUseCaseProvider).call(key);
-                  if (!ctx.mounted) return;
-                  Navigator.of(ctx).pop();
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("User deleted successfully")),
-                  );
-                } catch (e) {
-                  if (!ctx.mounted) return;
-                  Navigator.of(ctx).pop();
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
-                  );
-                }
+                final result = await ref.read(deleteUserUseCaseProvider).call(key);
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop();
+                if (!context.mounted) return;
+                result.fold(
+                  (failure) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete: ${failure.message}'), backgroundColor: Colors.red),
+                    );
+                  },
+                  (_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("User deleted successfully")),
+                    );
+                  },
+                );
               },
             ),
           ],

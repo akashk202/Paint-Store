@@ -16,13 +16,16 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
     if (_loaded) return;
 
     state = state.copyWith(loading: true, error: null);
-    try {
-      final items = await getRecommendedProducts(limit: limit);
-      state = state.copyWith(loading: false, items: items, error: null);
-      _loaded = true;
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e);
-    }
+    final result = await getRecommendedProducts(limit);
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (items) {
+        state = state.copyWith(loading: false, items: items, error: null);
+        _loaded = true;
+      },
+    );
   }
 
   Future<void> refresh({int limit = 10}) async {

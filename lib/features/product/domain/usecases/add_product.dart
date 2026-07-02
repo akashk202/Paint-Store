@@ -1,14 +1,15 @@
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 import '../repositories/product_repository.dart';
 
-class AddProduct {
+class AddProduct implements UseCase<void, Map<String, dynamic>> {
   final ProductRepository repository;
 
   AddProduct(this.repository);
 
-  Future<void> call(Map<String, dynamic> data) {
-    return repository.addProduct(data);
+  @override
+  Future<Either<Failure, void>> call(Map<String, dynamic> params) {
+    return repository.addProduct(params);
   }
 }
-
-
-// implements UseCase

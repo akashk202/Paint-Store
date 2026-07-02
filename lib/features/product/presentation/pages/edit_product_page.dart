@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:c_h_p/features/product/presentation/providers/product_providers.dart';
+import 'package:c_h_p/features/product/domain/usecases/upload_image_file.dart';
 
 class EditProductPage extends ConsumerStatefulWidget {
   final String productKey;
@@ -169,10 +170,14 @@ class _EditProductPageState extends ConsumerState<EditProductPage> {
 
   Future<String> _uploadFile(File file, String folder) async {
     final ext = file.path.toLowerCase();
-    if (ext.endsWith('.pdf')) {
-      return ref.read(uploadRawFileUseCaseProvider).call(file, folder: folder);
-    }
-    return ref.read(uploadImageFileUseCaseProvider).call(file, folder: folder);
+    final result = ext.endsWith('.pdf')
+        ? await ref.read(uploadRawFileUseCaseProvider).call(UploadFileParams(file: file, folder: folder))
+        : await ref.read(uploadImageFileUseCaseProvider).call(UploadFileParams(file: file, folder: folder));
+
+    return result.fold(
+      (failure) => throw Exception("Upload failed: ${failure.message}"),
+      (url) => url,
+    );
   }
 
   Future<void> _updateProduct() async {

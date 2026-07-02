@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:iconsax/iconsax.dart';
 import 'package:c_h_p/features/product/presentation/providers/product_providers.dart';
+import 'package:c_h_p/features/product/domain/usecases/upload_image_file.dart';
 
 class AddProductPage extends ConsumerStatefulWidget {
   const AddProductPage({super.key});
@@ -144,15 +145,17 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
 
   // Upload a file using Cloudinary Use Cases
   Future<String> _uploadFile(File file, String folder) async {
-    try {
-      if (file.path.toLowerCase().endsWith('.pdf')) {
-        return await ref.read(uploadRawFileUseCaseProvider).call(file, folder: folder);
-      }
-      return await ref.read(uploadImageFileUseCaseProvider).call(file, folder: folder);
-    } catch (e) {
-      debugPrint("Error uploading file to $folder: $e");
-      throw Exception("Upload failed for ${path.basename(file.path)}");
-    }
+    final result = file.path.toLowerCase().endsWith('.pdf')
+        ? await ref.read(uploadRawFileUseCaseProvider).call(UploadFileParams(file: file, folder: folder))
+        : await ref.read(uploadImageFileUseCaseProvider).call(UploadFileParams(file: file, folder: folder));
+
+    return result.fold(
+      (failure) {
+        debugPrint("Error uploading file to $folder: ${failure.message}");
+        throw Exception("Upload failed for ${path.basename(file.path)}");
+      },
+      (url) => url,
+    );
   }
 
   // Add product data to Firebase Realtime Database

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:c_h_p/core/usecases/usecase.dart';
 
 import '../../domain/entities/notification_entity.dart';
 import '../../domain/usecases/notifications_usecases.dart';
@@ -49,13 +50,17 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
 
   Future<void> start(String uid) async {
     state = state.copyWith(loading: true, error: null);
-    try {
-      _role = await _getUserRole(uid);
-      _listen(uid);
-      state = state.copyWith(loading: false);
-    } catch (e) {
-      state = state.copyWith(loading: false, error: e);
-    }
+    final roleResult = await _getUserRole(uid);
+    roleResult.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (role) {
+        _role = role;
+        _listen(uid);
+        state = state.copyWith(loading: false);
+      },
+    );
   }
 
   void _listen(String uid) {
@@ -77,7 +82,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     final isManager = _role == 'Manager';
 
     if (isAdmin || isManager) {
-      final stream = isAdmin ? _watchGlobalAdmins() : _watchGlobalManagers();
+      final stream = isAdmin ? _watchGlobalAdmins(const NoParams()) : _watchGlobalManagers(const NoParams());
       _globalSub = stream.listen((map) {
         _global = map;
         _recompute();
@@ -122,10 +127,37 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     state = state.copyWith(entries: out);
   }
 
-  Future<void> markAllRead(String uid) => _markAllRead(uid);
-  Future<void> clearAll(String uid) => _clearAll(uid);
-  Future<void> dismissGlobal(String uid, String signature) => _dismissGlobal(uid, signature);
-  Future<void> deletePersonal(String uid, String key) => _deletePersonal(uid, key);
+  Future<void> markAllRead(String uid) async {
+    final result = await _markAllRead(uid);
+    result.fold(
+      (failure) => state = state.copyWith(error: failure.message),
+      (_) {},
+    );
+  }
+
+  Future<void> clearAll(String uid) async {
+    final result = await _clearAll(uid);
+    result.fold(
+      (failure) => state = state.copyWith(error: failure.message),
+      (_) {},
+    );
+  }
+
+  Future<void> dismissGlobal(String uid, String signature) async {
+    final result = await _dismissGlobal(DismissGlobalParams(uid: uid, signature: signature));
+    result.fold(
+      (failure) => state = state.copyWith(error: failure.message),
+      (_) {},
+    );
+  }
+
+  Future<void> deletePersonal(String uid, String key) async {
+    final result = await _deletePersonal(DeletePersonalParams(uid: uid, key: key));
+    result.fold(
+      (failure) => state = state.copyWith(error: failure.message),
+      (_) {},
+    );
+  }
 
   @override
   void dispose() {

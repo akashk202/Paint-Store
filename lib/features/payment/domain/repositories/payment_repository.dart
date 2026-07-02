@@ -1,7 +1,10 @@
-abstract class PaymentRepository {
-  Future<List<String>> fetchCartItemNames();
+import 'package:dartz/dartz.dart';
+import 'package:c_h_p/core/error/failures.dart';
 
-  Future<String?> saveOrder({
+abstract class PaymentRepository {
+  Future<Either<Failure, List<String>>> fetchCartItemNames();
+
+  Future<Either<Failure, String?>> saveOrder({
     required String paymentId,
     String? signature,
     required int totalAmountPaise,
@@ -14,7 +17,7 @@ abstract class PaymentRepository {
     required List<String> items,
   });
 
-  Future<void> sendPurchaseNotifications({
+  Future<Either<Failure, void>> sendPurchaseNotifications({
     required List<String> productNames,
     required int totalAmountPaise,
     String? deliveryAddress,
@@ -25,8 +28,5 @@ abstract class PaymentRepository {
     String? phone,
   });
 
-  Future<void> clearCart();
+  Future<Either<Failure, void>> clearCart();
 }
-
-
-// Either<Failure, T>
