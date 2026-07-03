@@ -34,6 +34,7 @@ class VisualizerState {
   final bool isSaving;
   final String? savePath;
   final String? error;
+  final double tolerance;
 
   const VisualizerState({
     this.isInitializing = false,
@@ -55,6 +56,7 @@ class VisualizerState {
     this.isSaving = false,
     this.savePath,
     this.error,
+    this.tolerance = 25.0,
   });
 
   VisualizerState copyWith({
@@ -77,6 +79,7 @@ class VisualizerState {
     bool? isSaving,
     String? savePath,
     String? error,
+    double? tolerance,
   }) {
     return VisualizerState(
       isInitializing: isInitializing ?? this.isInitializing,
@@ -98,6 +101,7 @@ class VisualizerState {
       isSaving: isSaving ?? this.isSaving,
       savePath: savePath ?? this.savePath,
       error: error ?? this.error,
+      tolerance: tolerance ?? this.tolerance,
     );
   }
 
@@ -283,6 +287,7 @@ class VisualizerNotifier extends StateNotifier<VisualizerState> {
         startX: pixelX,
         startY: pixelY,
         targetColor: paintColor,
+        tolerance: state.tolerance,
       );
 
       // Push history for undo support
@@ -314,6 +319,11 @@ class VisualizerNotifier extends StateNotifier<VisualizerState> {
       undoHistory: history,
       error: null,
     );
+  }
+
+  /// Updates the paint tolerance/sensitivity threshold
+  void updateTolerance(double val) {
+    state = state.copyWith(tolerance: val);
   }
 
   /// Queries the client-side Gemini API for room style & paint shade recommendations

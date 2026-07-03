@@ -458,6 +458,61 @@ class _VisualizerPageState extends ConsumerState<VisualizerPage> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+
+          // Paint Sensitivity Slider
+          Row(
+            children: [
+              Icon(
+                Icons.tune_outlined,
+                size: 20,
+                color: Colors.grey.shade600,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Paint Sensitivity',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 4.0,
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
+                  ),
+                  child: Slider(
+                    value: state.tolerance,
+                    min: 5.0,
+                    max: 75.0,
+                    activeColor: Colors.deepOrange,
+                    inactiveColor: Colors.grey.shade200,
+                    onChanged: (val) {
+                      ref.read(visualizerNotifierProvider.notifier).updateTolerance(val);
+                    },
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${state.tolerance.round()}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
 
           // Two-Tone Slots Display (if combination mode is on)
