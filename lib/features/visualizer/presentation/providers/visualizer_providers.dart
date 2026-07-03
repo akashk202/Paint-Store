@@ -20,7 +20,5 @@ final visualizeImageUseCaseProvider = Provider<VisualizeImage>((ref) {
 
 final visualizerNotifierProvider =
     StateNotifierProvider<VisualizerNotifier, VisualizerState>((ref) {
-  return VisualizerNotifier(
-    visualizeImage: ref.read(visualizeImageUseCaseProvider),
-  );
+  return VisualizerNotifier();
 });
