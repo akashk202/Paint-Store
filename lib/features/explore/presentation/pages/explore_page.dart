@@ -13,6 +13,7 @@ import 'package:c_h_p/features/explore/presentation/pages/color_catalogue_page.d
 import 'package:c_h_p/features/home/presentation/pages/home_page.dart';
 import 'package:c_h_p/features/user/presentation/pages/personal_info_page.dart';
 import 'package:c_h_p/features/cart/presentation/pages/cart_page.dart';
+import 'package:c_h_p/features/visualizer/presentation/pages/visualizer_page.dart';
 
 class ExploreProductPage extends ConsumerStatefulWidget {
   const ExploreProductPage({super.key});
@@ -282,7 +283,7 @@ Widget _buildBottomBar(BuildContext context) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => const _VisualizerPlaceholder()),
+                        builder: (_) => const VisualizerPage()),
                   );
                 },
               ),
@@ -339,17 +340,6 @@ class _BottomItem extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _VisualizerPlaceholder extends StatelessWidget {
-  const _VisualizerPlaceholder();
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Visualizer')),
-      body: const Center(child: Text('Visualizer coming soon')),
     );
   }
 }
