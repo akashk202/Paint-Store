@@ -18,24 +18,33 @@ import 'package:c_h_p/core/presentation/pages/onboarding_screen.dart';
 import 'package:c_h_p/features/home/presentation/pages/home_page.dart';
 import 'test_helpers.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  debugPrint("DEBUG: Before Firebase.initializeApp");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  debugPrint("DEBUG: After Firebase.initializeApp");
 
   FirebaseDatabase.instanceFor(
     app: Firebase.app(),
-    databaseURL: 'https://smart-paint-shop-default-rtdb.firebaseio.com/',
+    databaseURL: 'https://smart-paint-shop-default-rtdb.firebaseio.com',
   );
+  debugPrint("DEBUG: After FirebaseDatabase.instanceFor");
 
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  if (!kIsWeb) {
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  }
+  debugPrint("DEBUG: After FirebaseMessaging.onBackgroundMessage");
 
   final api = const String.fromEnvironment('RECO_API');
   if (api.isNotEmpty) {
     RecommendationRemoteDataSource.apiBaseUrl = api;
   }
+  debugPrint("DEBUG: After RECO_API check");
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -73,28 +82,31 @@ class _MyAppState extends State<MyApp> {
       _initServices();
       _precacheAppImages();
     });
-    // Keep FCM registration updated with auth state
-    FirebaseAuth.instance.authStateChanges().listen((user) {
-      FCMRemoteDataSource.updateForUser(user);
-    });
-    // Foreground: show a local notification
-    FCMRemoteDataSource.listenForegroundMessages(onMessage: (m) {
-      final title = m.notification?.title ?? 'Notification';
-      final body = m.notification?.body ?? '';
-      final payload = m.data.isNotEmpty ? m.data.toString() : null;
-      NotificationRemoteDataSource.instance.showForegroundNotification(
-          title: title, body: body, payload: payload);
-    });
+    if (!kIsWeb) {
+      // Keep FCM registration updated with auth state
+      FirebaseAuth.instance.authStateChanges().listen((user) {
+        FCMRemoteDataSource.updateForUser(user);
+      });
+      // Foreground: show a local notification
+      FCMRemoteDataSource.listenForegroundMessages(onMessage: (m) {
+        final title = m.notification?.title ?? 'Notification';
+        final body = m.notification?.body ?? '';
+        final payload = m.data.isNotEmpty ? m.data.toString() : null;
+        NotificationRemoteDataSource.instance.showForegroundNotification(
+            title: title, body: body, payload: payload);
+      });
 
-    // Deep-link when user taps an FCM notification from background
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      NotificationRemoteDataSource.instance.navigatorKey.currentState?.push(
-        MaterialPageRoute(builder: (_) => const NotificationsPage()),
-      );
-    });
+      // Deep-link when user taps an FCM notification from background
+      FirebaseMessaging.onMessageOpenedApp.listen((message) {
+        NotificationRemoteDataSource.instance.navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => const NotificationsPage()),
+        );
+      });
+    }
   }
 
   Future<void> _initServices() async {
+    if (kIsWeb) return;
     try {
       await NotificationRemoteDataSource.instance.init();
       await FCMRemoteDataSource.requestPermission();
@@ -128,15 +140,22 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool isFirstTime = prefs.getBool('isFirstTime') ?? true;
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      bool isFirstTime = prefs.getBool('isFirstTime') ?? true;
 
-    setState(() {
-      _isFirstTime = isFirstTime;
-    });
+      setState(() {
+        _isFirstTime = isFirstTime;
+      });
 
-    if (isFirstTime) {
-      prefs.setBool('isFirstTime', false);
+      if (isFirstTime) {
+        prefs.setBool('isFirstTime', false);
+      }
+    } catch (e) {
+      debugPrint('SharedPreferences error: $e');
+      setState(() {
+        _isFirstTime = false;
+      });
     }
   }
 

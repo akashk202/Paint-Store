@@ -3,15 +3,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class FCMRemoteDataSource {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   static final DatabaseReference _db = FirebaseDatabase.instance.ref();
 
   static Future<void> initBackgroundHandler(Future<void> Function(RemoteMessage) handler) async {
+    if (kIsWeb) return;
     FirebaseMessaging.onBackgroundMessage(handler);
   }
 
   static Future<void> requestPermission() async {
+    if (kIsWeb) return;
     await _messaging.requestPermission(
       alert: true,
       badge: true,
@@ -21,6 +25,7 @@ class FCMRemoteDataSource {
   }
 
   static Future<void> updateForUser(User? user) async {
+    if (kIsWeb) return;
     if (user == null) return;
 
     final token = await _messaging.getToken();
@@ -44,6 +49,7 @@ class FCMRemoteDataSource {
   }
 
   static Future<void> unsubscribeForUser(User? user) async {
+    if (kIsWeb) return;
     if (user == null) return;
     final topic = 'user_${user.uid}';
     await _messaging.unsubscribeFromTopic(topic);
