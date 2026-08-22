@@ -14,4 +14,9 @@ class CartItem {
     required this.price,
     required this.quantity,
   });
+
+  String get cleanProductKey {
+    final idx = productKey.indexOf('_');
+    return idx != -1 ? productKey.substring(0, idx) : productKey;
+  }
 }

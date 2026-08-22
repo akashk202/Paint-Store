@@ -21,26 +21,7 @@ import 'package:c_h_p/features/explore/presentation/pages/explore_page.dart';
 import 'package:c_h_p/features/product/presentation/pages/latest_colors_page.dart';
 
 
-class CartItemDetails {
-  final String productKey;
-  final Map<String, dynamic> cartData;
-  final Product? productDetails;
 
-  CartItemDetails({
-    required this.productKey,
-    required this.cartData,
-    this.productDetails,
-  });
-
-  String get name =>
-      cartData['name'] ?? productDetails?.name ?? 'Unknown Product';
-  String get imageUrl =>
-      cartData['mainImageUrl'] ?? productDetails?.mainImageUrl ?? '';
-  int get quantity => cartData['quantity'] ?? 0;
-  String get selectedSize => cartData['selectedSize'] ?? '';
-  String get selectedPrice => cartData['selectedPrice'] ?? '0';
-  List<PackSize> get availableSizes => productDetails?.packSizes ?? [];
-}
 
 class CartPage extends ConsumerStatefulWidget {
   const CartPage({super.key});
@@ -52,9 +33,6 @@ class CartPage extends ConsumerStatefulWidget {
 class _CartPageState extends ConsumerState<CartPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Cache product details to avoid re-fetching on every quantity change
-  Map<String, Product?> _productCache = {};
-  String _lastKeysSignature = '';
   bool _justQuantityChange = false;
   final Map<String, Timer> _qtyDebounce = {};
 
@@ -178,71 +156,41 @@ class _CartPageState extends ConsumerState<CartPage> {
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
-      // AppBar is built dynamically
       body: currentUser == null
           ? _buildLoggedOutState()
           : Builder(builder: (context) {
-              final cartState = ref.watch(cartNotifierProvider);
-              if (cartState.loading && cartState.items.isEmpty) {
-                return Scaffold(
-                    appBar: _buildAppBar(false),
-                    body: _buildCartLoadingShimmer(3));
-              }
-              if (cartState.error != null) {
-                return Scaffold(
-                    appBar: _buildAppBar(false),
-                    body: Center(
-                        child: Text("Error: ${cartState.error}",
-                            style: TextStyle(color: Colors.red))));
-              }
-              final cartList = cartState.items;
-              final bool isCartEmpty = cartList.isEmpty;
-              if (isCartEmpty) {
-                return Scaffold(
-                    appBar: _buildAppBar(false), body: _buildEmptyCart());
-              }
-              final productKeys = cartList.map((e) => e.productKey).toList();
-              return FutureBuilder<Map<String, Product?>>(
-                future: _getProductDetailsCached(productKeys),
-                builder: (context, productDetailsSnapshot) {
-                  Widget bodyContent;
-                  List<CartItemDetails> cartItemsWithDetails = [];
+              final cartDetailsAsync = ref.watch(cartDetailsProvider);
 
-                  if (productDetailsSnapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    bodyContent = _buildCartLoadingShimmer(cartList.length);
-                  } else if (productDetailsSnapshot.hasError) {
-                    bodyContent = Center(
-                        child: Text("Error: ${productDetailsSnapshot.error}",
-                            style: TextStyle(color: Colors.red)));
-                  } else {
-                    final productDetailsMap = productDetailsSnapshot.data ?? {};
-                    cartItemsWithDetails = cartList.map((cartItem) { return CartItemDetails(productKey: cartItem.productKey, cartData: {'name': cartItem.name, 'mainImageUrl': cartItem.imageUrl, 'quantity': cartItem.quantity, 'selectedSize': cartItem.size, 'selectedPrice': cartItem.price}, productDetails: productDetailsMap[cartItem.productKey]); })
-                        .where((item) => item.productDetails != null)
-                        .toList();
-
-                    if (cartItemsWithDetails.isEmpty && cartList.isNotEmpty) {
-                      bodyContent = Center(
-                          child: Text("Items may have been removed.",
-                              style: TextStyle(color: Colors.orange.shade800)));
-                    } else if (cartItemsWithDetails.isEmpty) {
-                      bodyContent = _buildEmptyCart();
-                    } else {
-                      bodyContent = _buildCartContent(cartItemsWithDetails);
-                    }
+              return cartDetailsAsync.when(
+                data: (cartItemsWithDetails) {
+                  final bool isCartEmpty = cartItemsWithDetails.isEmpty;
+                  if (isCartEmpty) {
+                    return Scaffold(
+                      appBar: _buildAppBar(false),
+                      body: _buildEmptyCart(),
+                    );
                   }
 
                   return Scaffold(
                     backgroundColor: Colors.grey.shade100,
                     appBar: _buildAppBar(
-                      cartItemsWithDetails.isNotEmpty && !isCartEmpty,
-                      itemCount: cartItemsWithDetails.isNotEmpty
-                          ? cartItemsWithDetails.length
-                          : null,
+                      true,
+                      itemCount: cartItemsWithDetails.length,
                     ),
-                    body: bodyContent,
+                    body: _buildCartContent(cartItemsWithDetails),
                   );
                 },
+                loading: () => Scaffold(
+                  appBar: _buildAppBar(false),
+                  body: _buildCartLoadingShimmer(3),
+                ),
+                error: (err, stack) => Scaffold(
+                  appBar: _buildAppBar(false),
+                  body: Center(
+                    child: Text("Error: $err",
+                        style: const TextStyle(color: Colors.red)),
+                  ),
+                ),
               );
             }),
     );
@@ -273,48 +221,6 @@ class _CartPageState extends ConsumerState<CartPage> {
             ]
           : [],
     );
-  }
-
-  Future<Map<String, Product?>> _fetchAllProductDetails(
-      List<String> productKeys) async {
-    final Map<String, Product?> detailsMap = {};
-    // Use the UseCase via Riverpod provider
-    final fetchProductDetails = ref.read(cartFetchProductDetailsUseCaseProvider);
-    final result = await fetchProductDetails(productKeys);
-    result.fold(
-      (failure) {
-        debugPrint("Error fetching product details: ${failure.message}");
-      },
-      (rawDetails) {
-        rawDetails.forEach((key, value) {
-          if (value != null) {
-            try {
-              detailsMap[key] = ProductModel.fromMap(key, value);
-            } catch (e) {
-              debugPrint("Error parsing product details for $key: $e");
-              detailsMap[key] = null;
-            }
-          } else {
-            detailsMap[key] = null;
-          }
-        });
-      },
-    );
-    return detailsMap;
-  }
-
-  // Cached fetch: reuse details when product keys set hasn't changed
-  Future<Map<String, Product?>> _getProductDetailsCached(
-      List<String> productKeys) async {
-    final sorted = List<String>.from(productKeys)..sort();
-    final signature = sorted.join('|');
-    if (_lastKeysSignature == signature && _productCache.isNotEmpty) {
-      return _productCache;
-    }
-    final fetched = await _fetchAllProductDetails(productKeys);
-    _lastKeysSignature = signature;
-    _productCache = fetched;
-    return fetched;
   }
 
   // --- UI Building Widgets ---
@@ -591,7 +497,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                                 DropdownMenuItem<PackSize>(
                                     value: packSize,
                                     child: Text(
-                                        '${packSize.size} - ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹${packSize.price}',
+                                        '${packSize.size} - ₹${packSize.price}',
                                         style:
                                             GoogleFonts.poppins(fontSize: 14))))
                             .toList(),
@@ -607,7 +513,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                     Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Text(
-                            '${currentSelectedPackSize.size} - ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹${currentSelectedPackSize.price}',
+                            '${currentSelectedPackSize.size} - ₹${currentSelectedPackSize.price}',
                             style: GoogleFonts.poppins(
                                 fontSize: 14, color: Colors.grey.shade700))),
                   const SizedBox(height: 10),
@@ -698,7 +604,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹${lineTotal.toStringAsFixed(2)}',
+                          Text('₹${lineTotal.toStringAsFixed(2)}',
                               style: GoogleFonts.poppins(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           if (availableStock > 0)
@@ -782,7 +688,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(const SnackBar(
                           content: Text(
-                              'Order total must be at least ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹1 to proceed.'),
+                              'Order total must be at least ₹1 to proceed.'),
                           backgroundColor: Colors.orange,
                         ));
                         return;
@@ -826,7 +732,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                   fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
                   color: Colors.grey.shade700)),
           Text(
-            '${isDiscount ? '-' : ''}ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹${amount.toStringAsFixed(2)}',
+            '${isDiscount ? '-' : ''}₹${amount.toStringAsFixed(2)}',
             style: GoogleFonts.poppins(
                 fontSize: isTotal ? 20 : 16,
                 fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,

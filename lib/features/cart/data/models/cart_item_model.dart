@@ -15,8 +15,8 @@ class CartItemModel extends CartItem {
       productKey: key,
       name: map['name'] ?? '',
       imageUrl: map['mainImageUrl'] ?? '',
-      size: map['size'] ?? '',
-      price: map['price'] ?? '',
+      size: map['selectedSize'] ?? map['size'] ?? '',
+      price: map['selectedPrice'] ?? map['price'] ?? '',
       quantity: map['quantity'] ?? 1,
     );
   }

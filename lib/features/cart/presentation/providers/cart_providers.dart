@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:c_h_p/features/product/data/models/product_model.dart';
 
 
 
@@ -79,3 +80,73 @@ final cartNotifierProvider = StateNotifierProvider<CartNotifier, CartState>((ref
 });
 
 final cartCleanNotifierProvider = cartNotifierProvider;
+
+// ============================================
+// Product Details Cache & Cart Details Provider
+// ============================================
+
+class CartItemDetails {
+  final String productKey;
+  final Map<String, dynamic> cartData;
+  final Product? productDetails;
+
+  CartItemDetails({
+    required this.productKey,
+    required this.cartData,
+    this.productDetails,
+  });
+
+  String get name =>
+      cartData['name'] ?? productDetails?.name ?? 'Unknown Product';
+  String get imageUrl =>
+      cartData['mainImageUrl'] ?? productDetails?.mainImageUrl ?? '';
+  int get quantity => cartData['quantity'] ?? 0;
+  String get selectedSize => cartData['selectedSize'] ?? '';
+  String get selectedPrice => cartData['selectedPrice'] ?? '0';
+  List<PackSize> get availableSizes => productDetails?.packSizes ?? [];
+}
+
+final productDetailsProvider = FutureProvider.family<Product?, String>((ref, productKey) async {
+  final fetchUseCase = ref.read(cartFetchProductDetailsUseCaseProvider);
+  final result = await fetchUseCase([productKey]);
+  return result.fold(
+    (failure) => null,
+    (rawDetails) {
+      final raw = rawDetails[productKey];
+      if (raw != null) {
+        try {
+          return ProductModel.fromMap(productKey, raw);
+        } catch (_) {
+          return null;
+        }
+      }
+      return null;
+    },
+  );
+});
+
+final cartDetailsProvider = FutureProvider<List<CartItemDetails>>((ref) async {
+  final cartState = ref.watch(cartNotifierProvider);
+  final items = cartState.items;
+  if (items.isEmpty) return [];
+
+  final List<CartItemDetails> detailsList = [];
+  for (final item in items) {
+    final cleanKey = item.cleanProductKey;
+    final product = await ref.watch(productDetailsProvider(cleanKey).future);
+    if (product != null) {
+      detailsList.add(CartItemDetails(
+        productKey: cleanKey,
+        cartData: {
+          'name': item.name,
+          'mainImageUrl': item.imageUrl,
+          'quantity': item.quantity,
+          'selectedSize': item.size,
+          'selectedPrice': item.price
+        },
+        productDetails: product,
+      ));
+    }
+  }
+  return detailsList;
+});

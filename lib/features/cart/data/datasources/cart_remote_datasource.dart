@@ -94,10 +94,42 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
     final u = _user;
     if (u == null) return;
 
-    await _db.child('users/${u.uid}/cart/$productKey').update({
+    final idx = productKey.indexOf('_');
+    final cleanKey = idx != -1 ? productKey.substring(0, idx) : productKey;
+
+    final oldRef = _db.child('users/${u.uid}/cart/$productKey');
+    final oldSnap = await oldRef.get();
+    if (!oldSnap.exists || oldSnap.value is! Map) return;
+
+    final oldMap = Map<String, dynamic>.from(oldSnap.value as Map);
+    final name = oldMap['name'] ?? '';
+    final imageUrl = oldMap['mainImageUrl'] ?? '';
+    final oldQty = (oldMap['quantity'] ?? 1) is int
+        ? oldMap['quantity'] as int
+        : int.tryParse('${oldMap['quantity']}') ?? 1;
+
+    await oldRef.remove();
+
+    final sanitizedSize = size.replaceAll(RegExp(r'[.#$/\[\]]'), '_');
+    final newCompositeKey = '${cleanKey}_$sanitizedSize';
+    final newRef = _db.child('users/${u.uid}/cart/$newCompositeKey');
+
+    final newSnap = await newRef.get();
+    int targetQty = oldQty;
+    if (newSnap.exists && newSnap.value is Map) {
+      final newMap = Map<String, dynamic>.from(newSnap.value as Map);
+      final int newQty = (newMap['quantity'] ?? 0) is int
+          ? newMap['quantity'] as int
+          : int.tryParse('${newMap['quantity']}') ?? 0;
+      targetQty += newQty;
+    }
+
+    await newRef.set({
+      'name': name,
+      'mainImageUrl': imageUrl,
       'selectedSize': size,
       'selectedPrice': price,
-      'quantity': 1,
+      'quantity': targetQty,
     });
   }
 
@@ -128,20 +160,20 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
     final u = _user;
     if (u == null) return;
 
-    final cartRef = _db.child('users/${u.uid}/cart/$productKey');
+    final sanitizedSize = size.replaceAll(RegExp(r'[.#$/\[\]]'), '_');
+    final compositeKey = '${productKey}_$sanitizedSize';
+
+    final cartRef = _db.child('users/${u.uid}/cart/$compositeKey');
     final snap = await cartRef.get();
 
     if (snap.exists && snap.value is Map) {
       final current = Map<String, dynamic>.from(snap.value as Map);
+      final int currQty = (current['quantity'] ?? 0) is int
+          ? current['quantity'] as int
+          : int.tryParse('${current['quantity']}') ?? 0;
 
-      if ((current['selectedSize'] ?? '') == size) {
-        final int currQty = (current['quantity'] ?? 0) is int
-            ? current['quantity'] as int
-            : int.tryParse('${current['quantity']}') ?? 0;
-
-        await cartRef.update({'quantity': currQty + 1});
-        return;
-      }
+      await cartRef.update({'quantity': currQty + 1});
+      return;
     }
 
     await cartRef.set({
