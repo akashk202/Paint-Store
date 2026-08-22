@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -281,13 +281,16 @@ class VisualizerNotifier extends StateNotifier<VisualizerState> {
       final int pixelX = ((relativeX / renderedW) * imgWidth).round().clamp(0, imgWidth.toInt() - 1);
       final int pixelY = ((relativeY / renderedH) * imgHeight).round().clamp(0, imgHeight.toInt() - 1);
 
-      // Perform local queue-based flood fill recoloring
-      final updatedBytes = await LocalRecolorHelper.applyFloodFillRecolor(
-        imageBytes: workingBytes,
-        startX: pixelX,
-        startY: pixelY,
-        targetColor: paintColor,
-        tolerance: state.tolerance,
+      // Perform local queue-based flood fill recoloring in a background Isolate
+      final updatedBytes = await compute(
+        LocalRecolorHelper.applyFloodFillRecolorIsolate,
+        RecolorParams(
+          imageBytes: workingBytes,
+          startX: pixelX,
+          startY: pixelY,
+          targetColor: paintColor,
+          tolerance: state.tolerance,
+        ),
       );
 
       // Push history for undo support

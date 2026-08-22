@@ -169,4 +169,32 @@ class LocalRecolorHelper {
 
     return Uint8List.fromList(img.encodeJpg(image, quality: 90));
   }
+
+  /// Isolate entry point for recolor operations.
+  static Future<Uint8List> applyFloodFillRecolorIsolate(RecolorParams params) async {
+    return applyFloodFillRecolor(
+      imageBytes: params.imageBytes,
+      startX: params.startX,
+      startY: params.startY,
+      targetColor: params.targetColor,
+      tolerance: params.tolerance,
+    );
+  }
 }
+
+class RecolorParams {
+  final Uint8List imageBytes;
+  final int startX;
+  final int startY;
+  final Color targetColor;
+  final double tolerance;
+
+  const RecolorParams({
+    required this.imageBytes,
+    required this.startX,
+    required this.startY,
+    required this.targetColor,
+    required this.tolerance,
+  });
+}
+
